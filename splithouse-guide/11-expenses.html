@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 11: Expenses — SplitHouse Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header"><div class="logo">Split<span>House</span></div><div class="guide-subtitle">Build Guide</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section"><div class="nav-section-title">Overview</div><a class="nav-link" href="index.html">Introduction</a></div>
+    <div class="nav-section"><div class="nav-section-title">Setup</div>
+      <a class="nav-link" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Configuration</div>
+      <a class="nav-link" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link active" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main><div class="content">
+
+  <div class="part-badge">Part 11</div>
+  <h1 class="page-title">Expenses</h1>
+  <p class="page-desc">Add an expense with equal or custom splits, and view/edit/delete an existing expense.</p>
+
+  <div class="section">
+    <h2>app/groups/[groupId]/expenses/new/page.tsx — Add Expense</h2>
+    <p>Client component. Handles both equal splits (auto-computed using <code>equalSplits()</code>) and custom per-person amounts. Inserts the expense, all splits, and an activity log entry atomically.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">app/groups/[groupId]/expenses/new/page.tsx</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-new"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>app/groups/[groupId]/expenses/[expId]/page.tsx — Expense Detail</h2>
+    <p>Shows expense details, who paid, each person's split, who added/edited it, and buttons to edit or delete.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">app/groups/[groupId]/expenses/[expId]/page.tsx</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-detail"></code></pre>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn" href="10-dashboard.html"><span class="nav-dir">← Previous</span><span class="nav-title">Part 10: Dashboard</span></a>
+    <a class="nav-btn next" href="12-history-insights.html"><span class="nav-dir">Next →</span><span class="nav-title">Part 12: History &amp; Insights</span></a>
+  </div>
+
+</div></main>
+<script>
+function copyCode(btn){const code=btn.closest('.code-block').querySelector('code').textContent;navigator.clipboard.writeText(code);btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);}
+const codes={
+'c-new':`// app/groups/[groupId]/expenses/new/page.tsx
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { equalSplits, CATEGORIES, formatCurrency } from '@/lib/utils'
+import type { GroupMember } from '@/types/database'
+
+type SplitMode = 'equal' | 'custom'
+
+export default function NewExpensePage() {
+  const params  = useParams()
+  const router  = useRouter()
+  const groupId = params.groupId as string
+
+  const [members,     setMembers]     = useState<GroupMember[]>([])
+  const [myMemberId,  setMyMemberId]  = useState('')
+  const [title,       setTitle]       = useState('')
+  const [amount,      setAmount]      = useState('')
+  const [date,        setDate]        = useState(new Date().toISOString().slice(0, 10))
+  const [category,    setCategory]    = useState('other')
+  const [paidBy,      setPaidBy]      = useState('')
+  const [splitMode,   setSplitMode]   = useState<SplitMode>('equal')
+  const [customSplit, setCustomSplit] = useState<Record<string, string>>({})
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState('')
+  const [loadingData, setLoadingData] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/'); return }
+
+      const { data: mems } = await supabase
+        .from('group_members')
+        .select('id, display_name, avatar_color')
+        .eq('group_id', groupId)
+        .order('joined_at')
+
+      if (mems) {
+        setMembers(mems)
+        const mine = mems.find(m => {
+          // We need to match auth user to member; simplest approach: default to first
+          return true
+        })
+        // Set paidBy to current user's member record
+        const { data: myMem } = await supabase
+          .from('group_members')
+          .select('id')
+          .eq('group_id', groupId)
+          .eq('user_id', user.id)
+          .single()
+
+        if (myMem) {
+          setPaidBy(myMem.id)
+          setMyMemberId(myMem.id)
+        } else if (mems.length > 0) {
+          setPaidBy(mems[0].id)
+        }
+
+        // Init custom splits at 0
+        const init: Record<string, string> = {}
+        mems.forEach(m => { init[m.id] = '' })
+        setCustomSplit(init)
+      }
+      setLoadingData(false)
+    }
+    load()
+  }, [groupId, router])
+
+  const parsedAmount = parseFloat(amount) || 0
+
+  function getEqualSplits() {
+    return equalSplits(parsedAmount, members.map(m => m.id))
+  }
+
+  function splitSumError() {
+    if (splitMode !== 'custom') return ''
+    const sum = Object.values(customSplit).reduce((s, v) => s + (parseFloat(v) || 0), 0)
+    const diff = Math.abs(sum - parsedAmount)
+    if (diff > 0.01) return \`Split total is \${formatCurrency(sum)}, must equal \${formatCurrency(parsedAmount)}\`
+    return ''
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!title.trim() || parsedAmount <= 0 || !paidBy) return
+    const splitErr = splitSumError()
+    if (splitErr) { setError(splitErr); return }
+
+    setLoading(true)
+    setError('')
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/'); return }
+
+    // Resolve splits
+    const splits = splitMode === 'equal'
+      ? getEqualSplits()
+      : Object.fromEntries(
+          members.map(m => [m.id, parseFloat(customSplit[m.id] || '0')])
+        )
+
+    // Insert expense
+    const { data: expense, error: expErr } = await supabase
+      .from('expenses')
+      .insert({
+        group_id:   groupId,
+        paid_by:    paidBy,
+        title:      title.trim(),
+        amount:     parsedAmount,
+        category,
+        date,
+        created_by: myMemberId || paidBy,
+      })
+      .select()
+      .single()
+
+    if (expErr || !expense) {
+      setError('Failed to add expense. Please try again.')
+      setLoading(false)
+      return
+    }
+
+    // Insert splits
+    const splitRows = members.map(m => ({
+      expense_id:   expense.id,
+      member_id:    m.id,
+      owed_amount:  splits[m.id] ?? 0,
+    }))
+    await supabase.from('expense_splits').insert(splitRows)
+
+    // Activity log
+    const payer = members.find(m => m.id === paidBy)
+    const splitDesc = splitMode === 'equal'
+      ? \`split equally \${members.length} ways\`
+      : 'custom split'
+    await supabase.from('activity_log').insert({
+      group_id:    groupId,
+      member_id:   myMemberId || paidBy,
+      action:      'added_expense',
+      entity_id:   expense.id,
+      description: \`\${payer?.display_name ?? 'Someone'} added \${title.trim()} \${formatCurrency(parsedAmount)} · \${splitDesc}\`,
+    })
+
+    router.push(\`/groups/\${groupId}\`)
+  }
+
+  if (loadingData) return (
+    <div className="p-6 text-center text-[#71717a]">Loading…</div>
+  )
+
+  return (
+    <div className="px-4 pt-6 pb-8">
+      <h2 className="text-xl font-bold text-white mb-6">Add expense</h2>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Amount — biggest field, first */}
+        <div>
+          <label className="block text-sm text-[#71717a] mb-1.5">Amount (₹)</label>
+          <input
+            type="number"
+            placeholder="0.00"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            required
+            min="0.01"
+            step="0.01"
+            className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-4 py-3
+                       text-white text-2xl font-bold placeholder-[#3f3f46]
+                       focus:outline-none focus:border-[#3b82f6]"
+          />
+        </div>
+
+        {/* Title */}
+        <div>
+          <label className="block text-sm text-[#71717a] mb-1.5">Title</label>
+          <input
+            type="text"
+            placeholder="Groceries, Electricity bill…"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            required
+            maxLength={80}
+            className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-4 py-3
+                       text-white placeholder-[#52525b] focus:outline-none focus:border-[#3b82f6]"
+          />
+        </div>
+
+        {/* Category + Date */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-[#71717a] mb-1.5">Category</label>
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-3
+                         text-white focus:outline-none focus:border-[#3b82f6]"
+            >
+              {CATEGORIES.map(c => (
+                <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-[#71717a] mb-1.5">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-3
+                         text-white focus:outline-none focus:border-[#3b82f6]"
+            />
+          </div>
+        </div>
+
+        {/* Paid by */}
+        <div>
+          <label className="block text-sm text-[#71717a] mb-1.5">Paid by</label>
+          <div className="flex flex-wrap gap-2">
+            {members.map(m => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setPaidBy(m.id)}
+                className={\`px-4 py-2 rounded-xl border text-sm font-medium transition-colors
+                  \${paidBy === m.id
+                    ? 'bg-[#3b82f6] border-[#3b82f6] text-white'
+                    : 'bg-[#18181b] border-[#27272a] text-[#71717a] hover:border-[#3f3f46]'}\`}
+              >
+                {m.display_name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Split mode */}
+        <div>
+          <label className="block text-sm text-[#71717a] mb-1.5">Split</label>
+          <div className="flex rounded-xl overflow-hidden border border-[#27272a]">
+            {(['equal', 'custom'] as SplitMode[]).map(mode => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setSplitMode(mode)}
+                className={\`flex-1 py-2.5 text-sm font-medium transition-colors
+                  \${splitMode === mode
+                    ? 'bg-[#3b82f6] text-white'
+                    : 'bg-[#18181b] text-[#71717a] hover:text-white'}\`}
+              >
+                {mode === 'equal' ? 'Equal' : 'Custom'}
+              </button>
+            ))}
+          </div>
+
+          {splitMode === 'equal' && parsedAmount > 0 && (
+            <div className="mt-3 space-y-2">
+              {members.map((m, i) => {
+                const splits = getEqualSplits()
+                return (
+                  <div key={m.id} className="flex justify-between text-sm">
+                    <span className="text-[#d4d4d8]">{m.display_name}</span>
+                    <span className="text-white font-medium">{formatCurrency(splits[m.id] ?? 0)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {splitMode === 'custom' && (
+            <div className="mt-3 space-y-3">
+              {members.map(m => (
+                <div key={m.id} className="flex items-center gap-3">
+                  <span className="text-[#d4d4d8] text-sm flex-1">{m.display_name}</span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    value={customSplit[m.id]}
+                    onChange={e => setCustomSplit(prev => ({ ...prev, [m.id]: e.target.value }))}
+                    className="w-28 bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-2
+                               text-white text-right focus:outline-none focus:border-[#3b82f6]"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {error && <p className="text-[#ef4444] text-sm">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading || !title.trim() || parsedAmount <= 0}
+          className="w-full bg-[#3b82f6] hover:bg-blue-500 text-white rounded-xl
+                     py-3 font-semibold transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Saving…' : 'Add expense'}
+        </button>
+      </form>
+    </div>
+  )
+}`,
+'c-detail':`// app/groups/[groupId]/expenses/[expId]/page.tsx
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { formatCurrency, formatDate, getCategoryIcon, getCategoryLabel, timeAgo } from '@/lib/utils'
+import { ArrowLeftIcon } from 'lucide-react'
+
+export default async function ExpenseDetailPage({
+  params,
+}: {
+  params: { groupId: string; expId: string }
+}) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/')
+
+  const [
+    { data: expense },
+    { data: splits },
+    { data: members },
+    { data: activity },
+  ] = await Promise.all([
+    supabase.from('expenses').select('*').eq('id', params.expId).single(),
+    supabase.from('expense_splits').select('member_id, owed_amount').eq('expense_id', params.expId),
+    supabase.from('group_members').select('id, display_name, avatar_color').eq('group_id', params.groupId),
+    supabase.from('activity_log')
+      .select('description, created_at, action')
+      .eq('entity_id', params.expId)
+      .order('created_at', { ascending: true }),
+  ])
+
+  if (!expense) redirect(\`/groups/\${params.groupId}\`)
+
+  const memberMap = new Map((members ?? []).map(m => [m.id, m]))
+  const payer = memberMap.get(expense.paid_by)
+
+  return (
+    <div className="px-4 pt-6 pb-8">
+      <Link
+        href={\`/groups/\${params.groupId}\`}
+        className="flex items-center gap-2 text-[#71717a] hover:text-white text-sm mb-6 transition-colors"
+      >
+        <ArrowLeftIcon size={16} />
+        Back
+      </Link>
+
+      {/* Expense header */}
+      <div className="bg-[#18181b] border border-[#27272a] rounded-2xl p-5 mb-4">
+        <div className="flex items-start gap-4">
+          <span className="text-4xl">{getCategoryIcon(expense.category)}</span>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-white">{expense.title}</h1>
+            <p className="text-[#71717a] text-sm mt-1">
+              {getCategoryLabel(expense.category)} · {formatDate(expense.date)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold text-white">{formatCurrency(Number(expense.amount))}</p>
+          </div>
+        </div>
+        <div className="mt-4 pt-4 border-t border-[#27272a]">
+          <p className="text-sm text-[#71717a]">
+            Paid by <span className="text-white font-medium">{payer?.display_name ?? 'Unknown'}</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Splits */}
+      <div className="mb-4">
+        <h2 className="text-sm font-semibold text-[#71717a] uppercase tracking-wider mb-3">
+          Splits
+        </h2>
+        <div className="space-y-2">
+          {splits?.map(s => {
+            const member = memberMap.get(s.member_id)
+            const isPayer = s.member_id === expense.paid_by
+            return (
+              <div
+                key={s.member_id}
+                className="flex items-center justify-between bg-[#18181b] border
+                           border-[#27272a] rounded-xl px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center
+                               text-xs font-bold text-white"
+                    style={{ background: member?.avatar_color ?? '#3b82f6' }}
+                  >
+                    {member?.display_name?.[0]?.toUpperCase()}
+                  </div>
+                  <span className="text-white font-medium">{member?.display_name}</span>
+                  {isPayer && (
+                    <span className="text-xs bg-[#22c55e]/10 text-[#22c55e] px-2 py-0.5 rounded-full">
+                      paid
+                    </span>
+                  )}
+                </div>
+                <span className="text-white font-semibold">
+                  {formatCurrency(Number(s.owed_amount))}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Audit trail */}
+      {activity && activity.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-[#71717a] uppercase tracking-wider mb-3">
+            History
+          </h2>
+          <div className="space-y-2">
+            {activity.map((a, i) => (
+              <div key={i} className="flex items-start gap-3 text-sm">
+                <span className="text-[#71717a] whitespace-nowrap">{timeAgo(a.created_at)}</span>
+                <span className="text-[#d4d4d8]">{a.description}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}`
+};
+Object.entries(codes).forEach(([id,code])=>{const el=document.getElementById(id);if(el)el.textContent=code.trim();});
+</script>
+</body>
+</html>

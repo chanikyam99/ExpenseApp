@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SplitHouse — Build Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Split<span>House</span></div>
+    <div class="guide-subtitle">Build Guide</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">Overview</div>
+      <a class="nav-link active" href="index.html">Introduction</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Setup</div>
+      <a class="nav-link" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Configuration</div>
+      <a class="nav-link" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main>
+<div class="content">
+
+  <div class="part-badge">SplitHouse</div>
+  <h1 class="page-title">Build Your Own<br>Expense Splitter</h1>
+  <p class="page-desc">A complete step-by-step guide to building SplitHouse — a free, self-owned alternative to Tricount with correct balances, real-time activity, and spending insights.</p>
+
+  <div class="section">
+    <h2>What you'll build</h2>
+    <p>A web app for your household where everyone can log shared expenses, see who owes whom, and settle up — all for free, forever.</p>
+    <table>
+      <tr><th>Feature</th><th>Details</th></tr>
+      <tr><td>Multiple groups</td><td>House, trips, events — each independent</td></tr>
+      <tr><td>Add &amp; split expenses</td><td>Equal split or custom amounts per person</td></tr>
+      <tr><td>Correct balance calculation</td><td>Pairwise algorithm — no floating-point drift</td></tr>
+      <tr><td>Audit trail</td><td>Every expense shows who added/edited it</td></tr>
+      <tr><td>Real-time activity feed</td><td>Live updates via Supabase WebSockets</td></tr>
+      <tr><td>Monthly spending insights</td><td>Bar chart by category, pie chart by person</td></tr>
+      <tr><td>Settle up</td><td>Record payments, balances update instantly</td></tr>
+      <tr><td>Export to CSV</td><td>Full expense history download</td></tr>
+      <tr><td>Invite via link</td><td>One link, click → joined</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Tech Stack</h2>
+    <table>
+      <tr><th>Layer</th><th>Tool</th><th>Why</th></tr>
+      <tr><td>Framework</td><td><span class="badge">Next.js 14</span></td><td>UI + API in one project, one deploy</td></tr>
+      <tr><td>Language</td><td><span class="badge">TypeScript 5</span></td><td>Catches bugs before runtime</td></tr>
+      <tr><td>Styling</td><td><span class="badge">Tailwind CSS 3</span></td><td>Utility-first, dark-mode-ready</td></tr>
+      <tr><td>Charts</td><td><span class="badge">Recharts 2</span></td><td>React-native charts, free</td></tr>
+      <tr><td>Database</td><td><span class="badge">Supabase</span></td><td>PostgreSQL + Auth + Realtime, free tier</td></tr>
+      <tr><td>Hosting</td><td><span class="badge">Vercel</span></td><td>Git push = deployed, free tier</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Exact versions used in this guide</h2>
+    <table>
+      <tr><th>Package</th><th>Version</th><th>Install?</th></tr>
+      <tr><td>Node.js</td><td><span class="badge">20.18.0 LTS</span></td><td>Manual download</td></tr>
+      <tr><td>npm</td><td><span class="badge">10.8.2</span></td><td>Comes with Node</td></tr>
+      <tr><td>next</td><td><span class="badge">14.2.29</span></td><td>create-next-app</td></tr>
+      <tr><td>react</td><td><span class="badge">18.3.1</span></td><td>create-next-app</td></tr>
+      <tr><td>react-dom</td><td><span class="badge">18.3.1</span></td><td>create-next-app</td></tr>
+      <tr><td>typescript</td><td><span class="badge">5.7.2</span></td><td>create-next-app</td></tr>
+      <tr><td>tailwindcss</td><td><span class="badge">3.4.17</span></td><td>create-next-app</td></tr>
+      <tr><td>@supabase/supabase-js</td><td><span class="badge">2.47.10</span></td><td>npm install</td></tr>
+      <tr><td>@supabase/ssr</td><td><span class="badge">0.5.2</span></td><td>npm install</td></tr>
+      <tr><td>recharts</td><td><span class="badge">2.13.3</span></td><td>npm install</td></tr>
+      <tr><td>lucide-react</td><td><span class="badge">0.468.0</span></td><td>npm install</td></tr>
+      <tr><td>clsx</td><td><span class="badge">2.1.1</span></td><td>npm install</td></tr>
+      <tr><td>tailwind-merge</td><td><span class="badge">2.5.4</span></td><td>npm install</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Cost — $0/month, forever</h2>
+    <table>
+      <tr><th>Service</th><th>Free Tier Limit</th><th>Your usage (5 people)</th></tr>
+      <tr><td>Supabase DB storage</td><td>500 MB</td><td>~3 MB/year</td></tr>
+      <tr><td>Supabase MAU</td><td>50,000 users/month</td><td>5 users</td></tr>
+      <tr><td>Supabase bandwidth</td><td>5 GB/month (auto-resets)</td><td>&lt; 50 MB/month</td></tr>
+      <tr><td>Vercel bandwidth</td><td>100 GB/month (auto-resets)</td><td>&lt; 100 MB/month</td></tr>
+    </table>
+    <div class="callout callout-success">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">Bandwidth resets automatically every month. You will never hit storage limits for a household app. Your data is always exportable — never locked in.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>How long does this take?</h2>
+    <table>
+      <tr><th>Phase</th><th>Time</th></tr>
+      <tr><td>Prerequisites (Node, VS Code)</td><td>~15 minutes</td></tr>
+      <tr><td>Supabase setup</td><td>~10 minutes</td></tr>
+      <tr><td>Project scaffold + packages</td><td>~5 minutes</td></tr>
+      <tr><td>Writing all code files</td><td>~2–3 hours</td></tr>
+      <tr><td>Deploy to Vercel</td><td>~10 minutes</td></tr>
+      <tr><td><strong>Total</strong></td><td><strong>~3–4 hours</strong></td></tr>
+    </table>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn next" href="01-prerequisites.html">
+      <span class="nav-dir">Next →</span>
+      <span class="nav-title">Part 01: Prerequisites</span>
+    </a>
+  </div>
+
+</div>
+</main>
+</body>
+</html>

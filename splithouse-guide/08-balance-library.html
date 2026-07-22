@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 08: Balance Library — SplitHouse Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header"><div class="logo">Split<span>House</span></div><div class="guide-subtitle">Build Guide</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section"><div class="nav-section-title">Overview</div><a class="nav-link" href="index.html">Introduction</a></div>
+    <div class="nav-section"><div class="nav-section-title">Setup</div>
+      <a class="nav-link" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Configuration</div>
+      <a class="nav-link" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link active" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main><div class="content">
+
+  <div class="part-badge">Part 08</div>
+  <h1 class="page-title">Balance Library</h1>
+  <p class="page-desc">The core math that fixes Tricount's problem — pairwise balance calculation with exact arithmetic and a debt-simplification algorithm.</p>
+
+  <div class="section">
+    <h2>Why pairwise calculation?</h2>
+    <p>Most expense apps compute each person's "net balance" by adding up what they paid and subtracting what they owe. Over time, floating-point rounding makes this drift (e.g. <code>0.1 + 0.2 = 0.30000000000000004</code>).</p>
+    <p>This library calculates each <strong>pair</strong> of people independently. For any pair (A, B):</p>
+    <ol>
+      <li>Look at every expense: if B paid and A was in the split, A owes B that split amount</li>
+      <li>If A paid and B was in the split, reduce what A owes B</li>
+      <li>Subtract any settlements where A already paid B</li>
+    </ol>
+    <p>Rounding only happens at the very end — never accumulated. Result is always exact to 2 decimal places.</p>
+  </div>
+
+  <div class="section">
+    <h2>Equal split with exact arithmetic</h2>
+    <p>A ₹100 expense split 3 ways: <code>33.33 + 33.33 + 33.33 = 99.99</code> ❌ (1 paisa lost). The fix: work in <strong>integer paise</strong>, then assign the remainder to the first member:</p>
+    <table>
+      <tr><th>Member</th><th>Naive (wrong)</th><th>This library (correct)</th></tr>
+      <tr><td>Ali</td><td>33.33</td><td>33.34 ← gets the extra paisa</td></tr>
+      <tr><td>Raj</td><td>33.33</td><td>33.33</td></tr>
+      <tr><td>Priya</td><td>33.33</td><td>33.33</td></tr>
+      <tr><td><strong>Sum</strong></td><td><strong>99.99 ❌</strong></td><td><strong>100.00 ✅</strong></td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>lib/balance.ts — complete file</h2>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">lib/balance.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-balance"></code></pre>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn" href="07-auth.html"><span class="nav-dir">← Previous</span><span class="nav-title">Part 07: Authentication</span></a>
+    <a class="nav-btn next" href="09-groups-pages.html"><span class="nav-dir">Next →</span><span class="nav-title">Part 09: Groups Pages</span></a>
+  </div>
+
+</div></main>
+<script>
+function copyCode(btn){const code=btn.closest('.code-block').querySelector('code').textContent;navigator.clipboard.writeText(code);btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);}
+const codes={
+'c-balance':`// lib/balance.ts
+
+export interface Member {
+  id: string
+  display_name: string
+}
+
+export interface Expense {
+  id: string
+  paid_by: string
+  amount: number
+}
+
+export interface Split {
+  expense_id: string
+  member_id: string
+  owed_amount: number
+}
+
+export interface Settlement {
+  paid_by: string
+  paid_to: string
+  amount: number
+}
+
+export interface BalancePair {
+  fromId: string
+  fromName: string
+  toId: string
+  toName: string
+  amount: number   // how much fromId owes toId
+}
+
+// ─── Equal split with exact integer arithmetic ────────────────────────────────
+// Distributes total exactly across memberIds.
+// The first (total_cents % count) members each get 1 extra paisa.
+export function equalSplits(
+  total: number,
+  memberIds: string[]
+): Record<string, number> {
+  if (memberIds.length === 0) return {}
+
+  const cents = Math.round(total * 100)     // work in integer paise
+  const base = Math.floor(cents / memberIds.length)
+  const remainder = cents % memberIds.length
+
+  return Object.fromEntries(
+    memberIds.map((id, i) => [id, (base + (i < remainder ? 1 : 0)) / 100])
+  )
+}
+
+// ─── Pairwise balance ─────────────────────────────────────────────────────────
+// Returns a positive value if A owes B, negative if B owes A.
+export function computePairBalance(
+  memberId_A: string,
+  memberId_B: string,
+  expenses: Expense[],
+  splits: Split[],
+  settlements: Settlement[]
+): number {
+  let net = 0
+
+  for (const exp of expenses) {
+    const splitA = splits.find(
+      s => s.expense_id === exp.id && s.member_id === memberId_A
+    )
+    const splitB = splits.find(
+      s => s.expense_id === exp.id && s.member_id === memberId_B
+    )
+
+    if (exp.paid_by === memberId_B && splitA) {
+      net += Number(splitA.owed_amount)   // A owes B for this expense
+    }
+    if (exp.paid_by === memberId_A && splitB) {
+      net -= Number(splitB.owed_amount)   // B owes A → A owes B less
+    }
+  }
+
+  for (const s of settlements) {
+    if (s.paid_by === memberId_A && s.paid_to === memberId_B) {
+      net -= Number(s.amount)   // A already paid B
+    }
+    if (s.paid_by === memberId_B && s.paid_to === memberId_A) {
+      net += Number(s.amount)   // B paid A → A owes B more
+    }
+  }
+
+  // Round only at the final step — never accumulate rounded values
+  return Math.round(net * 100) / 100
+}
+
+// ─── Net balance per member ───────────────────────────────────────────────────
+// Positive net = this person is owed money overall.
+// Negative net = this person owes money overall.
+export function computeNetBalances(
+  members: Member[],
+  expenses: Expense[],
+  splits: Split[],
+  settlements: Settlement[]
+): Array<{ memberId: string; memberName: string; net: number }> {
+  const nets: Record<string, number> = {}
+  for (const m of members) nets[m.id] = 0
+
+  for (let i = 0; i < members.length; i++) {
+    for (let j = i + 1; j < members.length; j++) {
+      const A = members[i].id
+      const B = members[j].id
+      const pair = computePairBalance(A, B, expenses, splits, settlements)
+      nets[A] -= pair   // pair > 0 means A owes B → A's net goes down
+      nets[B] += pair   // B is owed → B's net goes up
+    }
+  }
+
+  return members.map(m => ({
+    memberId: m.id,
+    memberName: m.display_name,
+    net: Math.round(nets[m.id] * 100) / 100,
+  }))
+}
+
+// ─── Simplified debts ─────────────────────────────────────────────────────────
+// Reduces N*(N-1) pairwise debts to the minimum number of transactions
+// needed to make everyone whole. Uses a greedy creditor-debtor algorithm.
+export function simplifyDebts(
+  members: Member[],
+  expenses: Expense[],
+  splits: Split[],
+  settlements: Settlement[]
+): BalancePair[] {
+  const balances = computeNetBalances(members, expenses, splits, settlements)
+
+  // Make mutable copies
+  const creditors = balances.filter(b => b.net > 0.005).map(b => ({ ...b }))
+  const debtors   = balances.filter(b => b.net < -0.005).map(b => ({ ...b }))
+
+  const result: BalancePair[] = []
+  let i = 0, j = 0
+
+  while (i < debtors.length && j < creditors.length) {
+    const debtor   = debtors[i]
+    const creditor = creditors[j]
+    const amount   = Math.min(Math.abs(debtor.net), creditor.net)
+
+    if (amount > 0.005) {
+      result.push({
+        fromId:   debtor.memberId,
+        fromName: debtor.memberName,
+        toId:     creditor.memberId,
+        toName:   creditor.memberName,
+        amount:   Math.round(amount * 100) / 100,
+      })
+    }
+
+    debtor.net   += amount
+    creditor.net -= amount
+
+    if (Math.abs(debtor.net)   < 0.005) i++
+    if (creditor.net           < 0.005) j++
+  }
+
+  return result
+}`
+};
+Object.entries(codes).forEach(([id,code])=>{const el=document.getElementById(id);if(el)el.textContent=code.trim();});
+</script>
+</body>
+</html>

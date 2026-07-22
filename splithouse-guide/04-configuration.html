@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 04: Config Files — SplitHouse Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header"><div class="logo">Split<span>House</span></div><div class="guide-subtitle">Build Guide</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section"><div class="nav-section-title">Overview</div><a class="nav-link" href="index.html">Introduction</a></div>
+    <div class="nav-section"><div class="nav-section-title">Setup</div>
+      <a class="nav-link" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Configuration</div>
+      <a class="nav-link active" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main><div class="content">
+
+  <div class="part-badge">Part 04</div>
+  <h1 class="page-title">Config Files</h1>
+  <p class="page-desc">Set up Tailwind, Next.js config, global styles, and your environment variables. These files wire everything together.</p>
+
+  <div class="section">
+    <h2>tailwind.config.ts</h2>
+    <p>Replace the entire contents of <code>tailwind.config.ts</code> in your project root:</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">tailwind.config.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-tailwind"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>next.config.ts</h2>
+    <p>Replace <code>next.config.ts</code> (or <code>next.config.mjs</code>) in your project root:</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">next.config.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-next"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>app/globals.css</h2>
+    <p>Replace <code>app/globals.css</code> with this. It defines CSS variables for the dark color system and scrollbar styling:</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">app/globals.css</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-globals"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>.env.local</h2>
+    <p>Create a file called <code>.env.local</code> in your project root (same level as <code>package.json</code>). Paste your Supabase credentials from Part 02:</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">.env.local</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-env"></code></pre>
+    </div>
+    <div class="callout callout-danger">
+      <div class="callout-icon">🔒</div>
+      <div class="callout-body"><strong>Never commit .env.local to git.</strong> It is in .gitignore by default. When you deploy to Vercel, you enter these same values in Vercel's dashboard under Project Settings → Environment Variables.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Verify setup</h2>
+    <p>Run the dev server to confirm everything is wired up so far:</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-run"></code></pre>
+    </div>
+    <p>Open <code>http://localhost:3000</code>. You should see the default Next.js starter page with Tailwind working. We'll replace this with the login page in Part 07.</p>
+    <div class="callout callout-success">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">If the page loads without errors, your configuration is correct. Press <code>Ctrl+C</code> to stop the dev server.</div>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn" href="03-project-setup.html"><span class="nav-dir">← Previous</span><span class="nav-title">Part 03: Project Scaffold</span></a>
+    <a class="nav-btn next" href="05-types-utils.html"><span class="nav-dir">Next →</span><span class="nav-title">Part 05: Types &amp; Utils</span></a>
+  </div>
+
+</div></main>
+<script>
+function copyCode(btn){const code=btn.closest('.code-block').querySelector('code').textContent;navigator.clipboard.writeText(code);btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);}
+const codes={
+'c-tailwind':`import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        bg: '#09090b',
+        surface: '#18181b',
+        'surface-2': '#1c1c1f',
+        border: '#27272a',
+        'border-2': '#3f3f46',
+      },
+    },
+  },
+  plugins: [],
+}
+
+export default config`,
+'c-next':`import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {}
+
+export default nextConfig`,
+'c-globals':`@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #09090b;
+  --surface: #18181b;
+  --border: #27272a;
+  --text: #fafafa;
+  --muted: #71717a;
+  --green: #22c55e;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --amber: #f59e0b;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}`,
+'c-env':`# Paste your values from Supabase → Project Settings → API
+
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`,
+'c-run':`npm run dev`
+};
+Object.entries(codes).forEach(([id,code])=>{const el=document.getElementById(id);if(el)el.textContent=code.trim();});
+</script>
+</body>
+</html>

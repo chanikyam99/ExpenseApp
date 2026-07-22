@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 01: Prerequisites — SplitHouse Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Split<span>House</span></div>
+    <div class="guide-subtitle">Build Guide</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">Overview</div>
+      <a class="nav-link" href="index.html">Introduction</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Setup</div>
+      <a class="nav-link active" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Configuration</div>
+      <a class="nav-link" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main>
+<div class="content">
+
+  <div class="part-badge">Part 01</div>
+  <h1 class="page-title">Prerequisites</h1>
+  <p class="page-desc">Install all the tools you need before writing a single line of code. This takes about 15 minutes.</p>
+
+  <div class="section">
+    <h2>Step-by-step install</h2>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Install Node.js 20 LTS</div>
+          <p>Node.js is the runtime that powers Next.js. You need version 20 (LTS = Long Term Support = most stable).</p>
+          <ol>
+            <li>Go to <strong>nodejs.org</strong></li>
+            <li>Click the big green <strong>"20.x LTS"</strong> button (not Current)</li>
+            <li>Download the Windows installer (.msi)</li>
+            <li>Run it — accept all defaults, make sure "Add to PATH" is checked</li>
+          </ol>
+          <div class="callout callout-warn">
+            <div class="callout-icon">⚠️</div>
+            <div class="callout-body"><strong>Do not install Node 22 or 23</strong> — they are "Current" releases and some packages are not yet tested against them. Stick with 20 LTS.</div>
+          </div>
+          <p>After installing, open a <strong>new</strong> terminal (PowerShell or Command Prompt) and verify:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-filename">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code id="c1"></code></pre>
+          </div>
+          <p>You should see something like <code>v20.18.0</code> and <code>10.8.2</code>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Install Git</div>
+          <p>Git lets you version your code and connect it to GitHub for deployment on Vercel.</p>
+          <ol>
+            <li>Go to <strong>git-scm.com/download/win</strong></li>
+            <li>Download the 64-bit installer</li>
+            <li>Run it — all defaults are fine. On the "Adjusting your PATH" screen choose <strong>"Git from the command line and also from 3rd-party software"</strong></li>
+          </ol>
+          <p>Verify in a new terminal:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-filename">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code id="c2"></code></pre>
+          </div>
+          <p>You should see something like <code>git version 2.47.0.windows.1</code>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Install Visual Studio Code</div>
+          <p>VS Code is the code editor. You may already have it since you're reading this in VS Code.</p>
+          <ol>
+            <li>Go to <strong>code.visualstudio.com</strong></li>
+            <li>Download and install for Windows</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Install VS Code Extensions</div>
+          <p>Open VS Code → press <code>Ctrl+Shift+X</code> → search and install each:</p>
+          <table>
+            <tr><th>Extension</th><th>What it does</th></tr>
+            <tr><td>ESLint</td><td>Shows code errors as you type</td></tr>
+            <tr><td>Tailwind CSS IntelliSense</td><td>Autocomplete for Tailwind class names</td></tr>
+            <tr><td>Prettier - Code formatter</td><td>Auto-formats code on save</td></tr>
+            <tr><td>TypeScript Importer</td><td>Auto-imports TypeScript modules</td></tr>
+          </table>
+          <div class="callout callout-info">
+            <div class="callout-icon">💡</div>
+            <div class="callout-body">To enable Prettier on save: press <code>Ctrl+Shift+P</code> → type "Open User Settings JSON" → add <code>"editor.formatOnSave": true</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Create a GitHub account</div>
+          <p>GitHub stores your code and is what Vercel connects to for automatic deployments.</p>
+          <ol>
+            <li>Go to <strong>github.com</strong> → Sign up (free)</li>
+            <li>Verify your email</li>
+          </ol>
+          <p>Then configure Git with your identity (one-time setup):</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-filename">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code id="c3"></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">Create a Vercel account</div>
+          <p>Vercel hosts your app for free. Sign up at <strong>vercel.com</strong> using your GitHub account — this links them together for one-click deploys later.</p>
+          <div class="callout callout-success">
+            <div class="callout-icon">✅</div>
+            <div class="callout-body"><strong>All done with prerequisites!</strong> You have Node.js, Git, VS Code, GitHub, and Vercel ready.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn" href="index.html">
+      <span class="nav-dir">← Previous</span>
+      <span class="nav-title">Introduction</span>
+    </a>
+    <a class="nav-btn next" href="02-supabase.html">
+      <span class="nav-dir">Next →</span>
+      <span class="nav-title">Part 02: Supabase</span>
+    </a>
+  </div>
+
+</div>
+</main>
+<script>
+function copyCode(btn){
+  const code=btn.closest('.code-block').querySelector('code').textContent;
+  navigator.clipboard.writeText(code);
+  btn.textContent='Copied!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);
+}
+const codes={
+'c1':`node -v
+npm -v`,
+'c2':`git --version`,
+'c3':`git config --global user.name "Your Name"
+git config --global user.email "your@email.com"`
+};
+Object.entries(codes).forEach(([id,code])=>{
+  const el=document.getElementById(id);
+  if(el) el.textContent=code.trim();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 15: Verification &amp; Troubleshooting — SplitHouse Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header"><div class="logo">Split<span>House</span></div><div class="guide-subtitle">Build Guide</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section"><div class="nav-section-title">Overview</div><a class="nav-link" href="index.html">Introduction</a></div>
+    <div class="nav-section"><div class="nav-section-title">Setup</div>
+      <a class="nav-link" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Configuration</div>
+      <a class="nav-link" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link active" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main><div class="content">
+
+  <div class="part-badge">Part 15</div>
+  <h1 class="page-title">Verification &amp; Troubleshooting</h1>
+  <p class="page-desc">A test checklist to confirm everything works, plus solutions to every common error you might hit.</p>
+
+  <!-- ===== TEST CHECKLIST ===== -->
+  <div class="section">
+    <h2>Test Checklist</h2>
+    <p>Run each test before sharing the app with housemates. Each is designed to catch a specific failure mode.</p>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Magic link login works</div>
+          <ol>
+            <li>Open the app and enter your email</li>
+            <li>Check your email — you should receive a link within 30 seconds</li>
+            <li>Click the link — you should land on <code>/groups</code>, logged in</li>
+            <li>Refresh the page — you should still be logged in (session persisted)</li>
+          </ol>
+          <div class="callout callout-warn">
+            <div class="callout-icon">⚠️</div>
+            <div class="callout-body">If the link redirects to an error, check that <code>http://localhost:3000/auth/callback</code> is in your Supabase Redirect URLs (for local) and <code>https://your-app.vercel.app/auth/callback</code> (for production).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Invite link and join flow work</div>
+          <ol>
+            <li>Create a group and copy the invite link</li>
+            <li>Open it in a private/incognito window</li>
+            <li>Log in as a different email address</li>
+            <li>Confirm you land on the join page, enter a display name, and join</li>
+            <li>Confirm both accounts appear in the Members tab</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Balance correctness — manual verification</div>
+          <p>Add 3 expenses with known payers and splits, then verify the balances match your manual calculation.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-filename">Example scenario to verify</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code id="c1"></code></pre>
+          </div>
+          <p>Expected: Raj owes Ali ₹500 total (after removing Raj's grocery contribution of ₹400 from Ali's coverage). Work it out on paper, then confirm the dashboard shows the same number.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Split sum invariant</div>
+          <p>For every expense, the sum of all splits must equal the total amount exactly. Run this SQL in Supabase SQL Editor:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-filename">Supabase SQL Editor</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+            <pre><code id="c2"></code></pre>
+          </div>
+          <div class="callout callout-success">
+            <div class="callout-icon">✅</div>
+            <div class="callout-body">Expected: zero rows. If any rows appear, the <code>equalSplits()</code> function has a bug — check the integer paise arithmetic in <code>lib/balance.ts</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Settlement clears the balance</div>
+          <ol>
+            <li>With a non-zero balance showing on the dashboard, click "Record a settlement"</li>
+            <li>Enter the exact amount owed and submit</li>
+            <li>Return to the dashboard — balance should show "All settled up!" or a reduced amount</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">Real-time activity feed</div>
+          <ol>
+            <li>Open the Activity page in two browser tabs (both logged in)</li>
+            <li>In Tab 1, add a new expense</li>
+            <li>In Tab 2, watch the activity feed — the new entry should appear within 1–2 seconds without refreshing</li>
+          </ol>
+          <div class="callout callout-info">
+            <div class="callout-icon">💡</div>
+            <div class="callout-body">If real-time doesn't work, go to Supabase → Database → Replication and enable the <code>activity_log</code> table for the <code>supabase_realtime</code> publication.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <div class="step-title">CSV export</div>
+          <ol>
+            <li>Go to the History page</li>
+            <li>Click "Export CSV"</li>
+            <li>Open the downloaded file in Excel or Google Sheets</li>
+            <li>Verify: all expenses appear, columns are correct, amounts match</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <div class="step-title">Row-level security — users can't see other groups</div>
+          <ol>
+            <li>Create two separate Supabase accounts (two emails)</li>
+            <li>Each creates their own group</li>
+            <li>Log in as User A — confirm they can't see User B's group in the Groups list</li>
+            <li>Try navigating directly to User B's group URL — confirm it redirects away</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <div class="step-title">Mobile experience</div>
+          <ol>
+            <li>Open the live URL on a real phone</li>
+            <li>Test: login, create group, add expense, check balances</li>
+            <li>Verify the bottom navigation is reachable with thumbs</li>
+            <li>Verify forms don't get obscured by the keyboard</li>
+            <li>In Chrome on Android: tap the "Add to Home Screen" option — the app should install as a PWA</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== COMMON ERRORS ===== -->
+  <div class="section">
+    <h2>Common Errors &amp; Fixes</h2>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Error: "supabase is not defined" or build fails with module not found</strong><br>
+      Run <code>npm install</code> again. Make sure <code>@supabase/supabase-js</code> and <code>@supabase/ssr</code> are in <code>package.json</code>.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Error: "invalid API key" from Supabase</strong><br>
+      Your <code>.env.local</code> values are wrong or empty. Copy them fresh from Supabase → Settings → API. Restart the dev server after editing <code>.env.local</code>.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Error: Magic link redirects to "auth_failed"</strong><br>
+      The callback URL is not in Supabase's allowed list. Go to Supabase → Authentication → URL Configuration → Redirect URLs and add <code>http://localhost:3000/auth/callback</code> and your production URL.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Error: "relation does not exist" (Postgres error on insert)</strong><br>
+      The schema SQL was not run. Go to Supabase → SQL Editor and run the full schema from Part 02.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Error: RLS policy blocks all reads (empty lists everywhere)</strong><br>
+      The RLS policies were not created or the <code>is_group_member()</code> helper function is missing. Run the RLS SQL block from Part 02 in the SQL Editor. Also confirm the user is in <code>group_members</code> for that group.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Error: Vercel build fails — "Type error: ..."</strong><br>
+      TypeScript type errors don't crash the dev server but do block Vercel builds. Run <code>npx tsc --noEmit</code> locally to see all type errors and fix them before pushing.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Error: "cookies() should be awaited" warning in Next.js 15</strong><br>
+      This guide targets Next.js 14. If you accidentally installed 15+, either pin to 14 in <code>package.json</code> (<code>"next": "14.2.29"</code>) or update <code>lib/supabase/server.ts</code> to use <code>await cookies()</code>.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Real-time feed doesn't update</strong><br>
+      Enable the table for Realtime: Supabase → Database → Replication → <code>supabase_realtime</code> → toggle on <code>activity_log</code>. Also check the browser console for WebSocket errors.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Custom splits don't add up — form validation fires</strong><br>
+      The custom-split form sums all input values and blocks submit if they don't match the total. Check for floating-point input: entering "33.33 + 33.33 + 33.34" is fine, but "33.33 × 3" would show a ₹0.01 discrepancy. Use the equal-split mode for clean splits, or adjust one person's value to absorb the remainder.</div>
+    </div>
+
+    <div class="callout callout-danger" style="margin-bottom:1.5rem">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body"><strong>Charts are blank on the Insights page</strong><br>
+      Recharts requires data with the exact shape expected. Open the browser console — if you see a Recharts prop warning, check that the <code>dataKey</code> props in the BarChart and PieChart match the object keys returned by your aggregation logic.</div>
+    </div>
+  </div>
+
+  <!-- ===== OPTIONAL NEXT IMPROVEMENTS ===== -->
+  <div class="section">
+    <h2>Optional Next Improvements</h2>
+    <p>The app is fully functional as-is. These are ideas you can add later:</p>
+    <table>
+      <tr><th>Feature</th><th>Effort</th><th>Notes</th></tr>
+      <tr><td>Edit &amp; delete expenses</td><td>~2h</td><td>Add edit form in <code>expenses/[expId]/page.tsx</code>, update activity_log on each change</td></tr>
+      <tr><td>Push notifications</td><td>~3h</td><td>Web Push API + Supabase Edge Function triggered on new expense insert</td></tr>
+      <tr><td>Receipt photo upload</td><td>~2h</td><td>Supabase Storage bucket, add <code>receipt_url</code> column to expenses table</td></tr>
+      <tr><td>Recurring expenses</td><td>~4h</td><td>Add <code>recurring</code> and <code>recur_interval</code> columns; Supabase cron job (pg_cron) to auto-insert monthly</td></tr>
+      <tr><td>PDF monthly report</td><td>~3h</td><td><code>npm install @react-pdf/renderer</code>, render a React component to PDF server-side</td></tr>
+      <tr><td>Google OAuth</td><td>~1h</td><td>Already stubbed in the login page. Enable Google provider in Supabase Auth settings, add Client ID + Secret from Google Cloud Console</td></tr>
+      <tr><td>Dark/light theme toggle</td><td>~1h</td><td>Add <code>next-themes</code> package, move CSS variables to <code>:root[data-theme]</code></td></tr>
+      <tr><td>Expense search</td><td>~1h</td><td>Add a search input to the History page, filter by <code>title.toLowerCase().includes(query)</code></td></tr>
+    </table>
+  </div>
+
+  <!-- ===== DONE ===== -->
+  <div class="section">
+    <div class="callout callout-success">
+      <div class="callout-icon">🎉</div>
+      <div class="callout-body">
+        <strong>You built SplitHouse!</strong> A fully free, self-owned house expense splitter with:<br><br>
+        ✓ Passwordless magic-link login<br>
+        ✓ Multiple groups (house, trips, events)<br>
+        ✓ Mathematically correct pairwise balances<br>
+        ✓ Equal &amp; custom splits with exact arithmetic<br>
+        ✓ Greedy debt simplification (fewest transactions)<br>
+        ✓ Real-time activity feed<br>
+        ✓ Category charts &amp; spending insights<br>
+        ✓ CSV export<br>
+        ✓ Full audit trail<br>
+        ✓ Row-level security (each user sees only their groups)<br>
+        ✓ PWA-installable on mobile<br>
+        ✓ $0/month to run
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn" href="14-deploy.html"><span class="nav-dir">← Previous</span><span class="nav-title">Part 14: Deploy to Vercel</span></a>
+    <a class="nav-btn next" href="index.html"><span class="nav-dir">Start over</span><span class="nav-title">Introduction</span></a>
+  </div>
+
+</div></main>
+<script>
+function copyCode(btn){const code=btn.closest('.code-block').querySelector('code').textContent;navigator.clipboard.writeText(code);btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);}
+const codes={
+'c1':`Members: Ali and Raj
+Expense 1: Groceries ₹1,200 paid by Ali — split equally (₹600 each)
+Expense 2: Electricity ₹800 paid by Raj — split equally (₹400 each)
+Expense 3: Internet ₹500 paid by Ali — paid by Ali only (Raj owes ₹250)
+
+Expected balance:
+  Ali paid: ₹1,200 + ₹500 = ₹1,700, covered ₹600 + ₹250 = ₹850 of own share
+  Raj paid: ₹800, covered ₹400 + ₹400 = ₹800 of own share
+  Raj owes Ali: (₹600 + ₹250) - ₹400 = ₹450`,
+'c2':`-- Find expenses where splits don't sum to the total amount
+SELECT
+  e.id,
+  e.title,
+  e.amount          AS expense_amount,
+  SUM(es.owed_amount) AS splits_sum,
+  e.amount - SUM(es.owed_amount) AS difference
+FROM expenses e
+JOIN expense_splits es ON es.expense_id = e.id
+GROUP BY e.id, e.title, e.amount
+HAVING ABS(e.amount - SUM(es.owed_amount)) > 0.01
+ORDER BY ABS(e.amount - SUM(es.owed_amount)) DESC;`
+};
+Object.entries(codes).forEach(([id,code])=>{const el=document.getElementById(id);if(el)el.textContent=code.trim();});
+</script>
+</body>
+</html>

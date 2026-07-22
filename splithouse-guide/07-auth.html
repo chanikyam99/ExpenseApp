@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 07: Authentication — SplitHouse Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header"><div class="logo">Split<span>House</span></div><div class="guide-subtitle">Build Guide</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section"><div class="nav-section-title">Overview</div><a class="nav-link" href="index.html">Introduction</a></div>
+    <div class="nav-section"><div class="nav-section-title">Setup</div>
+      <a class="nav-link" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Configuration</div>
+      <a class="nav-link" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link active" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main><div class="content">
+
+  <div class="part-badge">Part 07</div>
+  <h1 class="page-title">Authentication</h1>
+  <p class="page-desc">The root layout, global styles, login page, and the auth callback handler that completes the magic-link login flow.</p>
+
+  <div class="section">
+    <h2>app/layout.tsx</h2>
+    <p>Replace the default <code>app/layout.tsx</code>. This is the shell that wraps every page with the correct font and dark background.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">app/layout.tsx</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-layout"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>app/page.tsx — Login page</h2>
+    <p>Replace the default <code>app/page.tsx</code>. This is the first page users see. It offers both magic-link email and Google login.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">app/page.tsx</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-login"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>app/auth/callback/route.ts</h2>
+    <p>When a user clicks the magic link in their email, Supabase redirects them to <code>/auth/callback?code=...</code>. This route handler exchanges the code for a session, then redirects to <code>/groups</code>.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">app/auth/callback/route.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-callback"></code></pre>
+    </div>
+    <div class="callout callout-warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body"><strong>Add callback URL in Supabase:</strong> Go to Authentication → URL Configuration → add <code>http://localhost:3000/auth/callback</code> to the "Redirect URLs" list. When deployed, also add your Vercel URL: <code>https://your-app.vercel.app/auth/callback</code></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Test it</h2>
+    <p>Run <code>npm run dev</code>, open <code>http://localhost:3000</code>, enter your email and click "Send magic link". Check your inbox, click the link — you should land on <code>/groups</code>.</p>
+    <div class="callout callout-success">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">Login works when: you enter email → get an email within 30 seconds → click the link → see <code>/groups</code> (even if it's blank for now).</div>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn" href="06-supabase-clients.html"><span class="nav-dir">← Previous</span><span class="nav-title">Part 06: Supabase Clients</span></a>
+    <a class="nav-btn next" href="08-balance-library.html"><span class="nav-dir">Next →</span><span class="nav-title">Part 08: Balance Library</span></a>
+  </div>
+
+</div></main>
+<script>
+function copyCode(btn){const code=btn.closest('.code-block').querySelector('code').textContent;navigator.clipboard.writeText(code);btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);}
+const codes={
+'c-layout':`// app/layout.tsx
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'SplitHouse',
+  description: 'Track shared house expenses — free, forever',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body
+        className={\`\${inter.className} bg-[#09090b] text-[#fafafa] antialiased\`}
+      >
+        {children}
+      </body>
+    </html>
+  )
+}`,
+'c-login':`// app/page.tsx
+'use client'
+
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const supabase = createClient()
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setLoading(true)
+    setError('')
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        emailRedirectTo: \`\${window.location.origin}/auth/callback\`,
+      },
+    })
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+    setSent(true)
+    setLoading(false)
+  }
+
+  async function handleGoogle() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: \`\${window.location.origin}/auth/callback\`,
+      },
+    })
+  }
+
+  return (
+    <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Split<span className="text-[#3b82f6]">House</span>
+          </h1>
+          <p className="text-[#71717a] mt-2 text-sm">
+            Track house expenses together — free, forever
+          </p>
+        </div>
+
+        {sent ? (
+          <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
+            <div className="text-3xl mb-3">📬</div>
+            <p className="font-medium text-white">Check your inbox</p>
+            <p className="text-[#71717a] text-sm mt-1">
+              We sent a login link to <strong>{email}</strong>
+            </p>
+            <button
+              onClick={() => { setSent(false); setEmail('') }}
+              className="mt-4 text-sm text-[#3b82f6] hover:underline"
+            >
+              Use a different email
+            </button>
+          </div>
+        ) : (
+          <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 space-y-4">
+            <form onSubmit={handleMagicLink} className="space-y-3">
+              <div>
+                <label className="block text-sm text-[#71717a] mb-1.5">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  className="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5
+                             text-white placeholder-[#52525b] focus:outline-none
+                             focus:border-[#3b82f6] transition-colors"
+                />
+              </div>
+
+              {error && (
+                <p className="text-[#ef4444] text-sm">{error}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#3b82f6] hover:bg-blue-500 text-white rounded-lg
+                           px-4 py-2.5 font-medium transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Sending link...' : 'Send magic link'}
+              </button>
+            </form>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-[#27272a]" />
+              <span className="text-[#71717a] text-xs uppercase tracking-wider">or</span>
+              <div className="flex-1 h-px bg-[#27272a]" />
+            </div>
+
+            <button
+              onClick={handleGoogle}
+              className="w-full bg-[#09090b] hover:bg-[#27272a] border border-[#27272a]
+                         text-white rounded-lg px-4 py-2.5 font-medium transition-colors
+                         flex items-center justify-center gap-3"
+            >
+              {/* Google logo SVG */}
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.657 14.107 17.64 11.8 17.64 9.2z" fill="#4285F4"/>
+                <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+              </svg>
+              Continue with Google
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}`,
+'c-callback':`// app/auth/callback/route.ts
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
+
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
+  // 'next' param lets us redirect to a specific page after login
+  const next = searchParams.get('next') ?? '/groups'
+
+  if (code) {
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (!error) {
+      return NextResponse.redirect(\`\${origin}\${next}\`)
+    }
+  }
+
+  // If something went wrong, go back to login
+  return NextResponse.redirect(\`\${origin}/?error=auth_failed\`)
+}`
+};
+Object.entries(codes).forEach(([id,code])=>{const el=document.getElementById(id);if(el)el.textContent=code.trim();});
+</script>
+</body>
+</html>

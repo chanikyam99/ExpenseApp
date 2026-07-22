@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 05: Types &amp; Utils — SplitHouse Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header"><div class="logo">Split<span>House</span></div><div class="guide-subtitle">Build Guide</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section"><div class="nav-section-title">Overview</div><a class="nav-link" href="index.html">Introduction</a></div>
+    <div class="nav-section"><div class="nav-section-title">Setup</div>
+      <a class="nav-link" href="01-prerequisites.html"><span class="part-num">01</span> Prerequisites</a>
+      <a class="nav-link" href="02-supabase.html"><span class="part-num">02</span> Supabase</a>
+      <a class="nav-link" href="03-project-setup.html"><span class="part-num">03</span> Project Scaffold</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Configuration</div>
+      <a class="nav-link" href="04-configuration.html"><span class="part-num">04</span> Config Files</a>
+      <a class="nav-link active" href="05-types-utils.html"><span class="part-num">05</span> Types &amp; Utils</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Core Code</div>
+      <a class="nav-link" href="06-supabase-clients.html"><span class="part-num">06</span> Supabase Clients</a>
+      <a class="nav-link" href="07-auth.html"><span class="part-num">07</span> Authentication</a>
+      <a class="nav-link" href="08-balance-library.html"><span class="part-num">08</span> Balance Library</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Pages</div>
+      <a class="nav-link" href="09-groups-pages.html"><span class="part-num">09</span> Groups Pages</a>
+      <a class="nav-link" href="10-dashboard.html"><span class="part-num">10</span> Dashboard</a>
+      <a class="nav-link" href="11-expenses.html"><span class="part-num">11</span> Expenses</a>
+      <a class="nav-link" href="12-history-insights.html"><span class="part-num">12</span> History &amp; Insights</a>
+      <a class="nav-link" href="13-activity-settle-members.html"><span class="part-num">13</span> Activity &amp; Settle</a>
+    </div>
+    <div class="nav-section"><div class="nav-section-title">Launch</div>
+      <a class="nav-link" href="14-deploy.html"><span class="part-num">14</span> Deploy to Vercel</a>
+      <a class="nav-link" href="15-verification.html"><span class="part-num">15</span> Verification</a>
+    </div>
+  </nav>
+</aside>
+<main><div class="content">
+
+  <div class="part-badge">Part 05</div>
+  <h1 class="page-title">Types &amp; Utils</h1>
+  <p class="page-desc">TypeScript types matching your database tables, plus utility functions used across all pages.</p>
+
+  <div class="section">
+    <h2>types/database.ts</h2>
+    <p>This file defines TypeScript types that exactly match your Supabase tables. Every page file imports from here for type safety.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">types/database.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-db"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>lib/utils.ts</h2>
+    <p>Shared helper functions and constants used across the app: currency formatting, date formatting, category definitions, and avatar color helpers.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">lib/utils.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-utils"></code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>lib/export.ts</h2>
+    <p>CSV export function called from the History page.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-filename">lib/export.ts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><code id="c-export"></code></pre>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a class="nav-btn" href="04-configuration.html"><span class="nav-dir">← Previous</span><span class="nav-title">Part 04: Config Files</span></a>
+    <a class="nav-btn next" href="06-supabase-clients.html"><span class="nav-dir">Next →</span><span class="nav-title">Part 06: Supabase Clients</span></a>
+  </div>
+
+</div></main>
+<script>
+function copyCode(btn){const code=btn.closest('.code-block').querySelector('code').textContent;navigator.clipboard.writeText(code);btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);}
+const codes={
+'c-db':`// types/database.ts
+// These mirror your Supabase tables exactly.
+
+export interface Group {
+  id: string
+  name: string
+  invite_code: string
+  status: 'active' | 'archived'
+  created_by: string
+  created_at: string
+}
+
+export interface GroupMember {
+  id: string
+  group_id: string
+  user_id: string
+  display_name: string
+  avatar_color: string | null
+  joined_at: string
+}
+
+export interface Expense {
+  id: string
+  group_id: string
+  paid_by: string
+  title: string
+  amount: number
+  category: string
+  date: string
+  created_by: string
+  created_at: string
+}
+
+export interface ExpenseSplit {
+  id: string
+  expense_id: string
+  member_id: string
+  owed_amount: number
+}
+
+export interface Settlement {
+  id: string
+  group_id: string
+  paid_by: string
+  paid_to: string
+  amount: number
+  note: string | null
+  date: string
+  created_at: string
+}
+
+export interface ActivityLog {
+  id: string
+  group_id: string
+  member_id: string
+  action: string
+  entity_id: string | null
+  description: string
+  created_at: string
+}`,
+'c-utils':`// lib/utils.ts
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+// Safely merges Tailwind class names without conflicts
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+// Format a number as Indian Rupees
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+// Format a date string (YYYY-MM-DD) as "15 Jan 2025"
+export function formatDate(date: string): string {
+  return new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+// Human-readable relative time: "2h ago", "3d ago"
+export function timeAgo(isoDate: string): string {
+  const diffMs = Date.now() - new Date(isoDate).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  const hours = Math.floor(mins / 60)
+  const days = Math.floor(hours / 24)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return \`\${mins}m ago\`
+  if (hours < 24) return \`\${hours}h ago\`
+  if (days < 7) return \`\${days}d ago\`
+  return formatDate(isoDate.slice(0, 10))
+}
+
+// All supported expense categories
+export const CATEGORIES = [
+  { id: 'groceries',     label: 'Groceries',     icon: '🛒' },
+  { id: 'utilities',     label: 'Utilities',     icon: '⚡' },
+  { id: 'rent',          label: 'Rent',          icon: '🏠' },
+  { id: 'dining',        label: 'Dining',        icon: '🍽️' },
+  { id: 'transport',     label: 'Transport',     icon: '🚗' },
+  { id: 'entertainment', label: 'Entertainment', icon: '🎬' },
+  { id: 'healthcare',    label: 'Healthcare',    icon: '💊' },
+  { id: 'other',         label: 'Other',         icon: '📦' },
+] as const
+
+export type CategoryId = typeof CATEGORIES[number]['id']
+
+export function getCategoryIcon(id: string): string {
+  return CATEGORIES.find(c => c.id === id)?.icon ?? '📦'
+}
+
+export function getCategoryLabel(id: string): string {
+  return CATEGORIES.find(c => c.id === id)?.label ?? 'Other'
+}
+
+// Avatar colors assigned to group members
+export const AVATAR_COLORS = [
+  '#3b82f6', '#8b5cf6', '#ec4899', '#f97316',
+  '#22c55e', '#14b8a6', '#f59e0b', '#ef4444',
+]
+
+// Get 1–2 uppercase initials from a display name
+export function getInitials(name: string): string {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+}
+
+// Generate a random 8-character invite code (no ambiguous chars)
+export function generateInviteCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return code
+}`,
+'c-export':`// lib/export.ts
+// Called from the History page's "Export CSV" button.
+
+interface ExportRow {
+  date: string
+  title: string
+  category: string
+  amount: number
+  paid_by_name: string
+}
+
+export function exportToCSV(rows: ExportRow[], groupName: string): void {
+  const headers = ['Date', 'Title', 'Category', 'Amount (INR)', 'Paid By']
+
+  const csvRows = rows.map(r => [
+    r.date,
+    \`"\${r.title.replace(/"/g, '""')}"\`,
+    r.category,
+    r.amount.toFixed(2),
+    \`"\${r.paid_by_name.replace(/"/g, '""')}"\`,
+  ])
+
+  const csvContent = [headers.join(','), ...csvRows.map(r => r.join(','))].join('\\n')
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = \`\${groupName.replace(/\\s+/g, '_')}_expenses.csv\`
+  link.click()
+  URL.revokeObjectURL(url)
+}`
+};
+Object.entries(codes).forEach(([id,code])=>{const el=document.getElementById(id);if(el)el.textContent=code.trim();});
+</script>
+</body>
+</html>
