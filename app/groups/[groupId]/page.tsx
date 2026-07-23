@@ -2,7 +2,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { simplifyDebts } from '@/lib/balance'
+import { simplifyDebts, computeNetBalances } from '@/lib/balance'
 import { formatCurrency, formatDate, getCategoryIcon, getInitials } from '@/lib/utils'
 
 export default async function DashboardPage({
@@ -59,6 +59,14 @@ export default async function DashboardPage({
         .reduce((sum: number, e: { amount: number | string }) => sum + Number(e.amount), 0)
     : 0
 
+  const netBalances = computeNetBalances(
+    members ?? [],
+    expenses ?? [],
+    splits ?? [],
+    settlements ?? []
+  )
+  const myNet = myMember ? (netBalances.find(b => b.memberId === myMember.id)?.net ?? 0) : 0
+
   // Build a combined, sorted recent activity list (expenses + settlements), take 5
   type RecentItem =
     | { kind: 'expense'; id: string; title: string; amount: number; category: string; date: string; payerId: string }
@@ -95,6 +103,19 @@ export default async function DashboardPage({
         )}
       </div>
 
+      {/* My balance banner */}
+      {myNet !== 0 && (
+        <div className={`px-4 py-3 rounded-xl border text-sm font-semibold -mt-2
+          ${myNet > 0
+            ? 'bg-[#22c55e]/10 border-[#22c55e]/20 text-[#22c55e]'
+            : 'bg-[#ef4444]/10 border-[#ef4444]/20 text-[#ef4444]'}`}
+        >
+          {myNet > 0
+            ? `You're owed ${formatCurrency(myNet)}`
+            : `You owe ${formatCurrency(Math.abs(myNet))}`}
+        </div>
+      )}
+
       {/* Simplified debts */}
       <div>
         <h2 className="text-sm font-semibold text-[#8c7b70] uppercase tracking-wider mb-3">
@@ -108,10 +129,12 @@ export default async function DashboardPage({
         ) : (
           <div className="space-y-2">
             {debts.map((d, i) => (
-              <div
+              <Link
                 key={i}
+                href={`/groups/${groupId}/settle?from=${d.fromId}&to=${d.toId}&amount=${d.amount}`}
                 className="bg-[#1a1614] border border-[#2c2825] rounded-xl px-4 py-3
-                           flex items-center justify-between shadow-sm"
+                           flex items-center justify-between shadow-sm
+                           hover:border-[#3a3330] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
@@ -135,10 +158,11 @@ export default async function DashboardPage({
                     <span className="font-medium text-[#faf7f5]">{d.toName}</span>
                   </p>
                 </div>
-                <span className="font-semibold text-[#ef4444]">
-                  {formatCurrency(d.amount)}
-                </span>
-              </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[#ef4444]">{formatCurrency(d.amount)}</span>
+                  <span className="text-[#8c7b70] text-xs">Settle →</span>
+                </div>
+              </Link>
             ))}
           </div>
         )}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
+import { useToast } from '@/components/toast-provider'
 
 interface Props {
   expId: string
@@ -16,7 +17,8 @@ interface Props {
 }
 
 export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, isCreator, from }: Props) {
-  const router = useRouter()
+  const router        = useRouter()
+  const { showToast } = useToast()
   const [confirming, setConfirming] = useState(false)
   const [deleting,   setDeleting]   = useState(false)
   const [error,      setError]      = useState('')
@@ -70,6 +72,7 @@ export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, is
       return
     }
 
+    showToast('Expense deleted', 'error')
     router.refresh()
     router.push(`/groups/${groupId}`)
   }

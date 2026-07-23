@@ -5,14 +5,16 @@ import Link from 'next/link'
 import { ArrowLeftIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { equalSplits, CATEGORIES, formatCurrency } from '@/lib/utils'
+import { useToast } from '@/components/toast-provider'
 import type { GroupMember } from '@/types/database'
 
 type SplitMode = 'equal' | 'custom'
 
 function EditExpenseContent() {
-  const params       = useParams()
-  const router       = useRouter()
-  const searchParams = useSearchParams()
+  const params         = useParams()
+  const router         = useRouter()
+  const searchParams   = useSearchParams()
+  const { showToast }  = useToast()
   const groupId      = params.groupId as string
   const expId        = params.expId as string
   const from         = searchParams.get('from') ?? ''
@@ -197,6 +199,7 @@ function EditExpenseContent() {
       description: `${editor?.display_name ?? 'Someone'} edited "${title.trim()}" — ${formatCurrency(parsedAmount)} paid by ${payer?.display_name ?? 'Unknown'} (${splitDesc})`,
     })
 
+    showToast('Expense updated!')
     router.refresh()
     router.push(`/groups/${groupId}/expenses/${expId}${fromParam}`)
   }
@@ -204,7 +207,18 @@ function EditExpenseContent() {
   const cancelHref = `/groups/${groupId}/expenses/${expId}${fromParam}`
 
   if (loadingData) return (
-    <div className="p-6 text-center text-[#8c7b70]">Loading…</div>
+    <div className="px-4 pt-6 pb-8 space-y-5 animate-pulse">
+      <div className="h-9 w-36 bg-[#1a1614] rounded-lg" />
+      <div className="h-14 bg-[#1a1614] rounded-xl" />
+      <div className="h-12 bg-[#1a1614] rounded-xl" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-12 bg-[#1a1614] rounded-xl" />
+        <div className="h-12 bg-[#1a1614] rounded-xl" />
+      </div>
+      <div className="h-12 bg-[#1a1614] rounded-xl" />
+      <div className="h-12 bg-[#1a1614] rounded-xl" />
+      <div className="h-12 bg-[#f97316]/20 rounded-xl" />
+    </div>
   )
 
   return (

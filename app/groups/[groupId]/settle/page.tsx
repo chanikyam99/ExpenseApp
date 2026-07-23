@@ -1,26 +1,34 @@
 // app/groups/[groupId]/settle/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
+import { useToast } from '@/components/toast-provider'
 import type { GroupMember } from '@/types/database'
 
-export default function SettlePage() {
-  const params  = useParams()
-  const router  = useRouter()
-  const groupId = params.groupId as string
+function SettleContent() {
+  const params        = useParams()
+  const router        = useRouter()
+  const searchParams  = useSearchParams()
+  const { showToast } = useToast()
+  const groupId       = params.groupId as string
 
-  const [members,     setMembers]     = useState<GroupMember[]>([])
-  const [myMemberId,  setMyMemberId]  = useState('')
-  const [paidBy,      setPaidBy]      = useState('')
-  const [paidTo,      setPaidTo]      = useState('')
-  const [amount,      setAmount]      = useState('')
-  const [note,        setNote]        = useState('')
-  const [date,        setDate]        = useState(new Date().toISOString().slice(0, 10))
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState('')
+  const [members,    setMembers]    = useState<GroupMember[]>([])
+  const [myMemberId, setMyMemberId] = useState('')
+  const [paidBy,     setPaidBy]     = useState('')
+  const [paidTo,     setPaidTo]     = useState('')
+  const [amount,     setAmount]     = useState('')
+  const [note,       setNote]       = useState('')
+  const [date,       setDate]       = useState(new Date().toISOString().slice(0, 10))
+  const [loading,    setLoading]    = useState(false)
+  const [error,      setError]      = useState('')
+
+  const preFrom   = searchParams.get('from')
+  const preTo     = searchParams.get('to')
+  const preAmount = searchParams.get('amount')
 
   useEffect(() => {
     async function load() {
@@ -37,13 +45,20 @@ export default function SettlePage() {
 
       if (mems) {
         setMembers(mems)
-        setMyMemberId(myMem?.id ?? mems[0]?.id ?? '')
-        setPaidBy(myMem?.id ?? mems[0]?.id ?? '')
-        setPaidTo(mems.find(m => m.id !== (myMem?.id ?? mems[0]?.id))?.id ?? '')
+        const defaultPaidBy = myMem?.id ?? mems[0]?.id ?? ''
+        setMyMemberId(myMem?.id ?? '')
+
+        // Pre-fill from query params if valid member ids
+        const validIds = new Set(mems.map(m => m.id))
+        const fromId   = preFrom   && validIds.has(preFrom)  ? preFrom  : defaultPaidBy
+        const toId     = preTo     && validIds.has(preTo)    ? preTo    : mems.find(m => m.id !== fromId)?.id ?? ''
+        setPaidBy(fromId)
+        setPaidTo(toId)
+        if (preAmount) setAmount(preAmount)
       }
     }
     load()
-  }, [groupId, router])
+  }, [groupId, router, preFrom, preTo, preAmount])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -82,13 +97,22 @@ export default function SettlePage() {
       description: `${payerName} paid ${payeeName} ${formatCurrency(parsedAmount)}${note ? ' · ' + note : ''}`,
     })
 
+    showToast('Settlement recorded!')
     router.refresh()
     router.push(`/groups/${groupId}`)
   }
 
   return (
     <div className="px-4 pt-6 pb-8">
-      <h2 className="text-xl font-bold text-[#faf7f5] mb-6">Record a settlement</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-[#faf7f5]">Record a settlement</h2>
+        <Link
+          href={`/groups/${groupId}`}
+          className="text-sm text-[#8c7b70] hover:text-[#faf7f5] transition-colors"
+        >
+          Cancel
+        </Link>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Paid by */}
@@ -99,7 +123,7 @@ export default function SettlePage() {
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setPaidBy(m.id)}
+                onClick={() => { setPaidBy(m.id); if (paidTo === m.id) setPaidTo('') }}
                 className={`px-4 py-2 rounded-xl border text-sm font-medium transition-colors
                   ${paidBy === m.id
                     ? 'bg-[#f97316] border-[#f97316] text-white'
@@ -186,5 +210,13 @@ export default function SettlePage() {
         </button>
       </form>
     </div>
+  )
+}
+
+export default function SettlePage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-[#8c7b70]">Loading…</div>}>
+      <SettleContent />
+    </Suspense>
   )
 }

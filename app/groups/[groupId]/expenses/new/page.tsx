@@ -3,16 +3,19 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { equalSplits, CATEGORIES, formatCurrency } from '@/lib/utils'
+import { useToast } from '@/components/toast-provider'
 import type { GroupMember } from '@/types/database'
 
 type SplitMode = 'equal' | 'custom'
 
 export default function NewExpensePage() {
-  const params  = useParams()
-  const router  = useRouter()
-  const groupId = params.groupId as string
+  const params      = useParams()
+  const router      = useRouter()
+  const groupId     = params.groupId as string
+  const { showToast } = useToast()
 
   const [members,     setMembers]     = useState<GroupMember[]>([])
   const [myMemberId,  setMyMemberId]  = useState('')
@@ -184,17 +187,37 @@ export default function NewExpensePage() {
       description: `${payer?.display_name ?? 'Someone'} added ${title.trim()} ${formatCurrency(parsedAmount)} · ${splitDesc}`,
     })
 
+    showToast('Expense added!')
     router.refresh()
     router.push(`/groups/${groupId}`)
   }
 
   if (loadingData) return (
-    <div className="p-6 text-center text-[#8c7b70]">Loading…</div>
+    <div className="px-4 pt-6 pb-8 space-y-5 animate-pulse">
+      <div className="h-9 w-32 bg-[#1a1614] rounded-lg" />
+      <div className="h-14 bg-[#1a1614] rounded-xl" />
+      <div className="h-12 bg-[#1a1614] rounded-xl" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-12 bg-[#1a1614] rounded-xl" />
+        <div className="h-12 bg-[#1a1614] rounded-xl" />
+      </div>
+      <div className="h-12 bg-[#1a1614] rounded-xl" />
+      <div className="h-12 bg-[#1a1614] rounded-xl" />
+      <div className="h-12 bg-[#f97316]/20 rounded-xl" />
+    </div>
   )
 
   return (
     <div className="px-4 pt-6 pb-8">
-      <h2 className="text-xl font-bold text-[#faf7f5] mb-6">Add expense</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-[#faf7f5]">Add expense</h2>
+        <Link
+          href={`/groups/${groupId}`}
+          className="text-sm text-[#8c7b70] hover:text-[#faf7f5] transition-colors"
+        >
+          Cancel
+        </Link>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Amount */}

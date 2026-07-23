@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate, getCategoryIcon, CATEGORIES } from '@/lib/utils'
 import { exportToCSV } from '@/lib/export'
 import { simplifyDebts } from '@/lib/balance'
+import { useToast } from '@/components/toast-provider'
 
 interface ExpenseRow {
   id: string
@@ -23,14 +24,17 @@ export default function HistoryPage() {
   const params  = useParams()
   const groupId = params.groupId as string
 
-  const [expenses,        setExpenses]        = useState<ExpenseRow[]>([])
-  const [members,         setMembers]         = useState<{ id: string; display_name: string }[]>([])
-  const [allSplits,       setAllSplits]       = useState<any[]>([])
-  const [allSettlements,  setAllSettlements]  = useState<any[]>([])
-  const [groupName,       setGroupName]       = useState('')
-  const [filterMember,    setFilterMember]    = useState('')
-  const [filterCategory,  setFilterCategory]  = useState('')
-  const [loading,         setLoading]         = useState(true)
+  const { showToast } = useToast()
+  const [expenses,           setExpenses]           = useState<ExpenseRow[]>([])
+  const [members,            setMembers]            = useState<{ id: string; display_name: string }[]>([])
+  const [allSplits,          setAllSplits]          = useState<any[]>([])
+  const [allSettlements,     setAllSettlements]     = useState<any[]>([])
+  const [groupName,          setGroupName]          = useState('')
+  const [filterMember,       setFilterMember]       = useState('')
+  const [filterCategory,     setFilterCategory]     = useState('')
+  const [loading,            setLoading]            = useState(true)
+  const [confirmDeleteId,    setConfirmDeleteId]    = useState<string | null>(null)
+  const [deletingSettlement, setDeletingSettlement] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -49,7 +53,7 @@ export default function HistoryPage() {
           .select('id, display_name')
           .eq('group_id', groupId),
         supabase.from('settlements')
-          .select('paid_by, paid_to, amount, date, note')
+          .select('id, paid_by, paid_to, amount, date, note')
           .eq('group_id', groupId)
           .order('date', { ascending: false }),
         supabase.from('groups')
@@ -105,6 +109,20 @@ export default function HistoryPage() {
     })
   }
 
+  async function deleteSettlement(id: string) {
+    setDeletingSettlement(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('settlements').delete().eq('id', id)
+    if (error) {
+      showToast('Failed to delete settlement', 'error')
+    } else {
+      setAllSettlements(prev => prev.filter((s: any) => s.id !== id))
+      showToast('Settlement deleted', 'error')
+    }
+    setConfirmDeleteId(null)
+    setDeletingSettlement(false)
+  }
+
   function handleExport() {
     const debts = simplifyDebts(
       members,
@@ -126,7 +144,19 @@ export default function HistoryPage() {
     )
   }
 
-  if (loading) return <div className="p-6 text-center text-[#8c7b70]">Loading…</div>
+  if (loading) return (
+    <div className="px-4 pt-6 space-y-4 animate-pulse">
+      <div className="flex gap-2">
+        <div className="h-9 w-28 bg-[#1a1614] rounded-lg" />
+        <div className="h-9 w-28 bg-[#1a1614] rounded-lg" />
+        <div className="h-9 w-24 bg-[#1a1614] rounded-lg ml-auto" />
+      </div>
+      <div className="h-4 w-20 bg-[#1a1614] rounded" />
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-16 bg-[#1a1614] rounded-xl" />
+      ))}
+    </div>
+  )
 
   return (
     <div className="px-4 pt-6">
@@ -217,13 +247,14 @@ export default function HistoryPage() {
             {allSettlements
               .slice()
               .sort((a: any, b: any) => b.date?.localeCompare(a.date ?? '') ?? 0)
-              .map((s: any, i: number) => {
+              .map((s: any) => {
                 const memberMap = new Map(members.map(m => [m.id, m.display_name]))
-                const fromName = memberMap.get(s.paid_by) ?? 'Unknown'
-                const toName   = memberMap.get(s.paid_to)  ?? 'Unknown'
+                const fromName  = memberMap.get(s.paid_by) ?? 'Unknown'
+                const toName    = memberMap.get(s.paid_to)  ?? 'Unknown'
+                const isConfirming = confirmDeleteId === s.id
                 return (
                   <div
-                    key={i}
+                    key={s.id}
                     className="flex items-center gap-3 bg-[#1a1614] border border-[#2c2825] rounded-xl p-4"
                   >
                     <span className="text-2xl">✅</span>
@@ -236,9 +267,36 @@ export default function HistoryPage() {
                         Settlement · {s.date ? formatDate(s.date) : ''}
                       </p>
                     </div>
-                    <span className="font-semibold text-[#22c55e] whitespace-nowrap">
-                      {formatCurrency(Number(s.amount))}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-semibold text-[#22c55e] whitespace-nowrap">
+                        {formatCurrency(Number(s.amount))}
+                      </span>
+                      {!isConfirming ? (
+                        <button
+                          onClick={() => setConfirmDeleteId(s.id)}
+                          className="text-[#8c7b70] hover:text-[#ef4444] transition-colors ml-1"
+                          aria-label="Delete settlement"
+                        >
+                          ✕
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-1.5 ml-1">
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs text-[#8c7b70] hover:text-[#faf7f5]"
+                          >
+                            No
+                          </button>
+                          <button
+                            onClick={() => deleteSettlement(s.id)}
+                            disabled={deletingSettlement}
+                            className="text-xs font-medium text-[#ef4444] hover:text-red-400 disabled:opacity-50"
+                          >
+                            {deletingSettlement ? '…' : 'Delete'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               })}
