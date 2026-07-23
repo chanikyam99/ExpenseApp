@@ -2,8 +2,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeftIcon } from 'lucide-react'
+import { ArrowLeftIcon, PlusIcon } from 'lucide-react'
 import { GroupNav } from '@/components/group-nav'
+import { LogoutButton } from '@/components/logout-button'
 
 export default async function GroupLayout({
   children,
@@ -47,7 +48,8 @@ export default async function GroupLayout({
             <span className="text-sm font-medium">Groups</span>
           </Link>
           <span className="text-[#2c2825]">|</span>
-          <span className="text-[#faf7f5] font-semibold text-sm truncate">{group.name}</span>
+          <span className="text-[#faf7f5] font-semibold text-sm truncate flex-1">{group.name}</span>
+          <LogoutButton />
         </div>
       </div>
 
@@ -55,6 +57,18 @@ export default async function GroupLayout({
       <div className="max-w-xl mx-auto pb-24">
         {children}
       </div>
+
+      {/* FAB — visible on every tab */}
+      <Link
+        href={`/groups/${params.groupId}/expenses/new`}
+        className="fixed bottom-20 right-4 z-20 w-14 h-14 rounded-full
+                   bg-[#f97316] hover:bg-[#fb923c] text-white
+                   flex items-center justify-center shadow-xl
+                   transition-all active:scale-95"
+        aria-label="Add expense"
+      >
+        <PlusIcon size={24} />
+      </Link>
 
       <GroupNav groupId={params.groupId} />
     </div>

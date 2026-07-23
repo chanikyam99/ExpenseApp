@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
@@ -11,14 +11,22 @@ interface Props {
   groupId: string
   expenseTitle: string
   expenseAmount: number
+  createdBy: string   // auth user id who created the expense
   from?: string
 }
 
-export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, from }: Props) {
+export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, createdBy, from }: Props) {
   const router = useRouter()
-  const [confirming, setConfirming] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState('')
+  const [confirming,  setConfirming]  = useState(false)
+  const [deleting,    setDeleting]    = useState(false)
+  const [error,       setError]       = useState('')
+  const [isCreator,   setIsCreator]   = useState(false)
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      setIsCreator(!!user && user.id === createdBy)
+    })
+  }, [createdBy])
 
   const fromParam = from ? `?from=${from}` : ''
   const editHref = `/groups/${groupId}/expenses/${expId}/edit${fromParam}`
@@ -75,14 +83,16 @@ export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, fr
 
   return (
     <div className="flex items-center gap-2">
-      <Link
-        href={editHref}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1614] border border-[#2c2825]
-                   text-[#8c7b70] hover:text-[#faf7f5] hover:border-[#3a3330] transition-colors text-sm"
-      >
-        <PencilIcon size={14} />
-        Edit
-      </Link>
+      {isCreator && (
+        <Link
+          href={editHref}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1614] border border-[#2c2825]
+                     text-[#8c7b70] hover:text-[#faf7f5] hover:border-[#3a3330] transition-colors text-sm"
+        >
+          <PencilIcon size={14} />
+          Edit
+        </Link>
+      )}
 
       {!confirming ? (
         <button

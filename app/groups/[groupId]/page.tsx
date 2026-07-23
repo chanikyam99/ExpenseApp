@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { simplifyDebts } from '@/lib/balance'
 import { formatCurrency, formatDate, getCategoryIcon, getInitials } from '@/lib/utils'
-import { PlusIcon } from 'lucide-react'
 
 export default async function DashboardPage({
   params,
@@ -217,16 +216,6 @@ export default async function DashboardPage({
         )}
       </div>
 
-      {/* FAB — fixed above bottom nav */}
-      <Link
-        href={`/groups/${groupId}/expenses/new`}
-        className="fixed bottom-20 right-4 z-20 w-14 h-14 rounded-full
-                   bg-[#f97316] hover:bg-[#fb923c] text-white
-                   flex items-center justify-center shadow-xl
-                   transition-all active:scale-95"
-      >
-        <PlusIcon size={24} />
-      </Link>
     </div>
   )
 }

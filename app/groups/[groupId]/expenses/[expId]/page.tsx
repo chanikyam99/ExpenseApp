@@ -60,6 +60,7 @@ export default async function ExpenseDetailPage({
           groupId={params.groupId}
           expenseTitle={expense.title}
           expenseAmount={Number(expense.amount)}
+          createdBy={expense.created_by}
           from={from}
         />
       </div>
