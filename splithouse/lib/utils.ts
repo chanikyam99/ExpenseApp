@@ -81,3 +81,24 @@ export function generateInviteCode(): string {
   }
   return code
 }
+
+// Split an amount equally among the given member IDs
+export function equalSplits(
+  amount: number,
+  memberIds: string[]
+): Record<string, number> {
+  if (memberIds.length === 0) return {}
+
+  const totalCents = Math.round(amount * 100)
+  const base = Math.floor(totalCents / memberIds.length)
+  const remainder = totalCents % memberIds.length
+
+  const result: Record<string, number> = {}
+
+  memberIds.forEach((id, index) => {
+    const cents = base + (index < remainder ? 1 : 0)
+    result[id] = cents / 100
+  })
+
+  return result
+}

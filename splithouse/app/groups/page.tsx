@@ -8,7 +8,6 @@ export default async function GroupsPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
-
   const { data: memberships } = await supabase
     .from('group_members')
     .select('id, display_name, group_id, groups(id, name, status)')

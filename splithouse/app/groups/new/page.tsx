@@ -25,6 +25,11 @@ export default function NewGroupPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/'); return }
 
+    const { data: who, error: whoErr } = await supabase.rpc('who_am_i')
+
+    console.log('who_am_i:', who)
+    console.log('who_am_i error:', whoErr)
+
     // 1. Create the group
     const { data: group, error: groupErr } = await supabase
       .from('groups')
@@ -41,6 +46,13 @@ export default function NewGroupPage() {
       setLoading(false)
       return
     }
+    // if (groupErr || !group) {
+    // console.error("GROUP ERROR:", groupErr)
+    // console.error("GROUP DATA:", group)
+    // setError(groupErr?.message ?? "Failed to create group")
+    // setLoading(false)
+    // return
+    // }
 
     // 2. Add creator as first member
     const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
