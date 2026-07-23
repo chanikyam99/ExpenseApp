@@ -26,8 +26,9 @@ function EditExpenseContent() {
   const [category,    setCategory]    = useState('other')
   const [paidBy,      setPaidBy]      = useState('')
   const [splitMode,   setSplitMode]   = useState<SplitMode>('equal')
-  const [customSplit, setCustomSplit] = useState<Record<string, string>>({})
-  const [lockedSplit, setLockedSplit] = useState<Set<string>>(new Set())
+  const [customSplit,  setCustomSplit]  = useState<Record<string, string>>({})
+  const [lockedSplit,  setLockedSplit]  = useState<Set<string>>(new Set())
+  const [clearedSplit, setClearedSplit] = useState<Set<string>>(new Set())
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState('')
   const [loadingData, setLoadingData] = useState(true)
@@ -98,15 +99,20 @@ function EditExpenseContent() {
       members.forEach(m => { init[m.id] = splits[m.id]?.toFixed(2) ?? '0.00' })
       setCustomSplit(init)
       setLockedSplit(new Set())
+      setClearedSplit(new Set())
     }
   }
 
   function handleCustomChange(memberId: string, rawValue: string) {
-    const newLocked = new Set(lockedSplit)
+    const newLocked  = new Set(lockedSplit)
+    const newCleared = new Set(clearedSplit)
+
     if (rawValue === '') {
       newLocked.delete(memberId)
+      newCleared.add(memberId)
     } else {
       newLocked.add(memberId)
+      newCleared.delete(memberId)
     }
 
     const newCustom = { ...customSplit, [memberId]: rawValue }
@@ -116,17 +122,18 @@ function EditExpenseContent() {
       .reduce((sum, m) => sum + (parseFloat(newCustom[m.id]) || 0), 0)
 
     const remaining = parsedAmount - lockedTotal
-    const unlockedIds = members.filter(m => !newLocked.has(m.id)).map(m => m.id)
+    const autoIds = members.filter(m => !newLocked.has(m.id) && !newCleared.has(m.id)).map(m => m.id)
 
-    if (unlockedIds.length > 0) {
+    if (autoIds.length > 0) {
       if (remaining > 0) {
-        const autoSplits = equalSplits(remaining, unlockedIds)
-        unlockedIds.forEach(id => { newCustom[id] = autoSplits[id].toFixed(2) })
+        const autoSplits = equalSplits(remaining, autoIds)
+        autoIds.forEach(id => { newCustom[id] = autoSplits[id].toFixed(2) })
       } else {
-        unlockedIds.forEach(id => { newCustom[id] = '0.00' })
+        autoIds.forEach(id => { newCustom[id] = '0.00' })
       }
     }
 
+    setClearedSplit(newCleared)
     setLockedSplit(newLocked)
     setCustomSplit(newCustom)
   }
