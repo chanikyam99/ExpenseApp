@@ -23,6 +23,7 @@ export default async function DashboardPage({
     { data: splits },
     { data: settlements },
     { data: recentExpenses },
+    { data: recentSettlements },
   ] = await Promise.all([
     supabase.from('group_members').select(`
       id, group_id, user_id, display_name, avatar_color, joined_at
@@ -34,7 +35,12 @@ export default async function DashboardPage({
       .select('id, title, amount, category, date, paid_by')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(10),
+    supabase.from('settlements')
+      .select('id, paid_by, paid_to, amount, date, note')
+      .eq('group_id', groupId)
+      .order('date', { ascending: false })
+      .limit(10),
   ])
 
   const memberMap = new Map((members ?? []).map(m => [m.id, m]))
@@ -47,6 +53,26 @@ export default async function DashboardPage({
   )
 
   const totalSpend = (expenses ?? []).reduce((sum, e) => sum + Number(e.amount), 0)
+
+  // Build a combined, sorted recent activity list (expenses + settlements), take 5
+  type RecentItem =
+    | { kind: 'expense'; id: string; title: string; amount: number; category: string; date: string; payerId: string }
+    | { kind: 'settlement'; id: string; fromId: string; toId: string; amount: number; date: string; note?: string | null }
+
+  const expItems: RecentItem[] = (recentExpenses ?? []).map(e => ({
+    kind: 'expense' as const,
+    id: e.id, title: e.title, amount: Number(e.amount),
+    category: e.category, date: e.date, payerId: e.paid_by,
+  }))
+  const settleItems: RecentItem[] = (recentSettlements ?? []).map(s => ({
+    kind: 'settlement' as const,
+    id: s.id, fromId: s.paid_by, toId: s.paid_to,
+    amount: Number(s.amount), date: s.date, note: s.note,
+  }))
+
+  const recentItems = [...expItems, ...settleItems]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 5)
 
   return (
     <div className="px-4 pt-6 space-y-6 pb-6">
@@ -113,7 +139,7 @@ export default async function DashboardPage({
         )}
       </div>
 
-      {/* Recent expenses */}
+      {/* Recent activity — expenses + settlements combined */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-[#8c7b70] uppercase tracking-wider">
@@ -127,39 +153,65 @@ export default async function DashboardPage({
           </Link>
         </div>
 
-        {(recentExpenses ?? []).length === 0 ? (
+        {recentItems.length === 0 ? (
           <div className="bg-[#1a1614] border border-[#2c2825] rounded-xl p-6 text-center shadow-sm">
-            <p className="text-[#8c7b70]">No expenses yet.</p>
+            <p className="text-[#8c7b70]">No activity yet.</p>
             <Link
               href={`/groups/${groupId}/expenses/new`}
               className="inline-block mt-3 text-sm text-[#f97316] hover:underline"
             >
-              Add the first one →
+              Add the first expense →
             </Link>
           </div>
         ) : (
           <div className="space-y-2">
-            {recentExpenses?.map(exp => {
-              const payer = memberMap.get(exp.paid_by)
-              return (
-                <Link
-                  key={exp.id}
-                  href={`/groups/${groupId}/expenses/${exp.id}`}
-                  className="flex items-center gap-3 bg-[#1a1614] border border-[#2c2825]
-                             rounded-xl p-4 hover:border-[#3a3330] transition-colors shadow-sm"
-                >
-                  <span className="text-2xl">{getCategoryIcon(exp.category)}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[#faf7f5] truncate">{exp.title}</p>
-                    <p className="text-[#8c7b70] text-xs mt-0.5">
-                      {payer?.display_name} · {formatDate(exp.date)}
-                    </p>
+            {recentItems.map(item => {
+              if (item.kind === 'expense') {
+                const payer = memberMap.get(item.payerId)
+                return (
+                  <Link
+                    key={`exp-${item.id}`}
+                    href={`/groups/${groupId}/expenses/${item.id}`}
+                    className="flex items-center gap-3 bg-[#1a1614] border border-[#2c2825]
+                               rounded-xl p-4 hover:border-[#3a3330] transition-colors shadow-sm"
+                  >
+                    <span className="text-2xl">{getCategoryIcon(item.category)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-[#faf7f5] truncate">{item.title}</p>
+                      <p className="text-[#8c7b70] text-xs mt-0.5">
+                        {payer?.display_name} · {formatDate(item.date)}
+                      </p>
+                    </div>
+                    <span className="font-semibold text-[#faf7f5] whitespace-nowrap">
+                      {formatCurrency(item.amount)}
+                    </span>
+                  </Link>
+                )
+              } else {
+                const from = memberMap.get(item.fromId)
+                const to   = memberMap.get(item.toId)
+                return (
+                  <div
+                    key={`settle-${item.id}`}
+                    className="flex items-center gap-3 bg-[#1a1614] border border-[#2c2825]
+                               rounded-xl p-4 shadow-sm"
+                  >
+                    <span className="text-2xl">✅</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-[#faf7f5] truncate">
+                        {from?.display_name ?? '?'} paid {to?.display_name ?? '?'}
+                        {item.note ? ` · ${item.note}` : ''}
+                      </p>
+                      <p className="text-[#8c7b70] text-xs mt-0.5">
+                        Settlement · {formatDate(item.date)}
+                      </p>
+                    </div>
+                    <span className="font-semibold text-[#22c55e] whitespace-nowrap">
+                      {formatCurrency(item.amount)}
+                    </span>
                   </div>
-                  <span className="font-semibold text-[#faf7f5] whitespace-nowrap">
-                    {formatCurrency(Number(exp.amount))}
-                  </span>
-                </Link>
-              )
+                )
+              }
             })}
           </div>
         )}

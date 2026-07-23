@@ -148,6 +148,7 @@ function EditExpenseContent() {
       description: `${editor?.display_name ?? 'Someone'} edited "${title.trim()}" — ${formatCurrency(parsedAmount)} paid by ${payer?.display_name ?? 'Unknown'} (${splitDesc})`,
     })
 
+    router.refresh()
     router.push(`/groups/${groupId}/expenses/${expId}${fromParam}`)
   }
 

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { PlusIcon } from 'lucide-react'
 import { DeleteGroupButton } from '@/components/delete-group-button'
+import { LogoutButton } from '@/components/logout-button'
 
 export default async function GroupsPage() {
   const supabase = createClient()
@@ -26,14 +27,17 @@ export default async function GroupsPage() {
           <h1 className="text-xl font-bold text-[#faf7f5]">
             Split<span className="text-[#f97316]">House</span>
           </h1>
-          <Link
-            href="/groups/new"
-            className="flex items-center gap-2 bg-[#f97316] hover:bg-[#fb923c]
-                       text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <PlusIcon size={16} />
-            New group
-          </Link>
+          <div className="flex items-center gap-3">
+            <LogoutButton />
+            <Link
+              href="/groups/new"
+              className="flex items-center gap-2 bg-[#f97316] hover:bg-[#fb923c]
+                         text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <PlusIcon size={16} />
+              New group
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -96,19 +100,29 @@ export default async function GroupsPage() {
             </summary>
             <div className="mt-3 space-y-2">
               {archived.map(m => (
-                <Link
+                <div
                   key={m.group_id}
-                  href={`/groups/${m.group_id}`}
-                  className="flex items-center justify-between bg-[#1a1614]/60 border
-                             border-[#2c2825] rounded-xl p-4 opacity-60 hover:opacity-100
-                             transition-opacity"
+                  className="flex items-center gap-2 bg-[#1a1614]/60 border border-[#2c2825]
+                             rounded-xl p-4 hover:border-[#3a3330] transition-colors"
                 >
-                  <div>
-                    <p className="font-medium text-[#faf7f5]">{(m.groups as any)?.name}</p>
-                    <p className="text-[#8c7b70] text-xs mt-0.5">Archived</p>
-                  </div>
-                  <span className="text-[#8c7b70]">→</span>
-                </Link>
+                  <Link
+                    href={`/groups/${m.group_id}`}
+                    className="flex items-center justify-between flex-1 min-w-0 group"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-[#faf7f5] truncate">{(m.groups as any)?.name}</p>
+                      <p className="text-[#8c7b70] text-xs mt-0.5">Archived</p>
+                    </div>
+                    <span className="text-[#8c7b70] group-hover:text-[#faf7f5] transition-colors mx-3">→</span>
+                  </Link>
+                  {(m.groups as any)?.created_by === user.id && (
+                    <DeleteGroupButton
+                      groupId={m.group_id}
+                      groupName={(m.groups as any)?.name ?? ''}
+                      isArchived
+                    />
+                  )}
+                </div>
               ))}
             </div>
           </details>

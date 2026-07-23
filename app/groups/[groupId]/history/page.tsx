@@ -49,8 +49,9 @@ export default function HistoryPage() {
           .select('id, display_name')
           .eq('group_id', groupId),
         supabase.from('settlements')
-          .select('paid_by, paid_to, amount')
-          .eq('group_id', groupId),
+          .select('paid_by, paid_to, amount, date, note')
+          .eq('group_id', groupId)
+          .order('date', { ascending: false }),
         supabase.from('groups')
           .select('name')
           .eq('id', groupId)
@@ -203,6 +204,45 @@ export default function HistoryPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Settlements section */}
+      {allSettlements.length > 0 && (
+        <div className="mt-8">
+          <p className="text-xs font-semibold text-[#8c7b70] uppercase tracking-wider mb-3">
+            Settlements
+          </p>
+          <div className="space-y-2">
+            {allSettlements
+              .slice()
+              .sort((a: any, b: any) => b.date?.localeCompare(a.date ?? '') ?? 0)
+              .map((s: any, i: number) => {
+                const memberMap = new Map(members.map(m => [m.id, m.display_name]))
+                const fromName = memberMap.get(s.paid_by) ?? 'Unknown'
+                const toName   = memberMap.get(s.paid_to)  ?? 'Unknown'
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 bg-[#1a1614] border border-[#2c2825] rounded-xl p-4"
+                  >
+                    <span className="text-2xl">✅</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-[#faf7f5] truncate">
+                        {fromName} paid {toName}
+                        {s.note ? ` · ${s.note}` : ''}
+                      </p>
+                      <p className="text-[#8c7b70] text-xs mt-0.5">
+                        Settlement · {s.date ? formatDate(s.date) : ''}
+                      </p>
+                    </div>
+                    <span className="font-semibold text-[#22c55e] whitespace-nowrap">
+                      {formatCurrency(Number(s.amount))}
+                    </span>
+                  </div>
+                )
+              })}
+          </div>
         </div>
       )}
     </div>

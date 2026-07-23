@@ -82,6 +82,7 @@ export default function SettlePage() {
       description: `${payerName} paid ${payeeName} ${formatCurrency(parsedAmount)}${note ? ' · ' + note : ''}`,
     })
 
+    router.refresh()
     router.push(`/groups/${groupId}`)
   }
 

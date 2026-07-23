@@ -69,6 +69,7 @@ export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, fr
       return
     }
 
+    router.refresh()
     router.push(`/groups/${groupId}`)
   }
 

@@ -17,3 +17,19 @@ export async function archiveGroup(groupId: string): Promise<{ error?: string }>
   revalidatePath('/groups')
   return {}
 }
+
+export async function unarchiveGroup(groupId: string): Promise<{ error?: string }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('groups')
+    .update({ status: 'active' })
+    .eq('id', groupId)
+    .eq('created_by', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/groups')
+  return {}
+}

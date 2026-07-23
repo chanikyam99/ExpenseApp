@@ -135,6 +135,7 @@ export default function NewExpensePage() {
       description: `${payer?.display_name ?? 'Someone'} added ${title.trim()} ${formatCurrency(parsedAmount)} · ${splitDesc}`,
     })
 
+    router.refresh()
     router.push(`/groups/${groupId}`)
   }
 
