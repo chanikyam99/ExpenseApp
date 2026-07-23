@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AVATAR_COLORS } from '@/lib/utils'
 
+
 export default function JoinPage() {
   const params = useParams()
   const router = useRouter()
@@ -25,8 +26,10 @@ export default function JoinPage() {
 
       if (!user) {
         // Save invite code in session storage and redirect to login
-        sessionStorage.setItem('pendingInvite', inviteCode)
-        router.push('/')
+        // sessionStorage.setItem('pendingInvite', inviteCode)
+        // router.push('/')
+        // router.push(`/?next=/join/${inviteCode}`)
+        router.push(`/?next=${encodeURIComponent(`/join/${inviteCode}`)}`)
         return
       }
 
