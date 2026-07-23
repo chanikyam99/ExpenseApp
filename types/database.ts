@@ -13,10 +13,10 @@ export interface Group {
 export interface GroupMember {
   id: string
   group_id: string
-  user_id: string
+  user_id: string | null   // null = unclaimed placeholder slot
   display_name: string
   avatar_color: string | null
-  joined_at: string
+  joined_at: string | null  // null until claimed
 }
 
 export interface Expense {
