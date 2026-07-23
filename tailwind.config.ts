@@ -9,11 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#09090b',
-        surface: '#18181b',
-        'surface-2': '#1c1c1f',
-        border: '#27272a',
-        'border-2': '#3f3f46',
+        bg: '#0f0d0c',
+        surface: '#1a1614',
+        'surface-2': '#201c1a',
+        border: '#2c2825',
+        'border-2': '#3a3330',
+        primary: '#f97316',
+        'primary-h': '#fb923c',
+        muted: '#8c7b70',
       },
     },
   },

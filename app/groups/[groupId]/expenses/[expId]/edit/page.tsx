@@ -1,24 +1,28 @@
-// app/groups/[groupId]/expenses/new/page.tsx
 'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeftIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { equalSplits, CATEGORIES, formatCurrency } from '@/lib/utils'
 import type { GroupMember } from '@/types/database'
 
 type SplitMode = 'equal' | 'custom'
 
-export default function NewExpensePage() {
-  const params  = useParams()
-  const router  = useRouter()
-  const groupId = params.groupId as string
+function EditExpenseContent() {
+  const params       = useParams()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const groupId      = params.groupId as string
+  const expId        = params.expId as string
+  const from         = searchParams.get('from') ?? ''
+  const fromParam    = from ? `?from=${from}` : ''
 
   const [members,     setMembers]     = useState<GroupMember[]>([])
   const [myMemberId,  setMyMemberId]  = useState('')
   const [title,       setTitle]       = useState('')
   const [amount,      setAmount]      = useState('')
-  const [date,        setDate]        = useState(new Date().toISOString().slice(0, 10))
+  const [date,        setDate]        = useState('')
   const [category,    setCategory]    = useState('other')
   const [paidBy,      setPaidBy]      = useState('')
   const [splitMode,   setSplitMode]   = useState<SplitMode>('equal')
@@ -33,36 +37,51 @@ export default function NewExpensePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/'); return }
 
-      const { data: mems } = await supabase
-        .from('group_members')
-        .select(`id, group_id, user_id, display_name, avatar_color, joined_at`)
-        .eq('group_id', groupId)
-        .order('joined_at')
+      const [
+        { data: expense },
+        { data: mems },
+        { data: myMem },
+      ] = await Promise.all([
+        supabase.from('expenses').select('*').eq('id', expId).single(),
+        supabase.from('group_members').select('id, group_id, user_id, display_name, avatar_color, joined_at').eq('group_id', groupId).order('joined_at'),
+        supabase.from('group_members').select('id').eq('group_id', groupId).eq('user_id', user.id).single(),
+      ])
 
-      if (mems) {
-        setMembers(mems)
-        const { data: myMem } = await supabase
-          .from('group_members')
-          .select('id')
-          .eq('group_id', groupId)
-          .eq('user_id', user.id)
-          .single()
+      if (!expense || !mems) { router.push(`/groups/${groupId}`); return }
 
-        if (myMem) {
-          setPaidBy(myMem.id)
-          setMyMemberId(myMem.id)
-        } else if (mems.length > 0) {
-          setPaidBy(mems[0].id)
-        }
+      // Fetch existing splits
+      const { data: splits } = await supabase
+        .from('expense_splits')
+        .select('member_id, owed_amount')
+        .eq('expense_id', expId)
 
-        const init: Record<string, string> = {}
-        mems.forEach(m => { init[m.id] = '' })
-        setCustomSplit(init)
-      }
+      // Pre-fill expense fields
+      setTitle(expense.title)
+      setAmount(String(expense.amount))
+      setDate(expense.date)
+      setCategory(expense.category)
+      setPaidBy(expense.paid_by)
+      setMembers(mems)
+      if (myMem) setMyMemberId(myMem.id)
+
+      // Detect equal vs custom split
+      const expectedEqual = equalSplits(Number(expense.amount), mems.map(m => m.id))
+      const isEqual = (splits ?? []).every(s =>
+        Math.abs(Number(s.owed_amount) - (expectedEqual[s.member_id] ?? 0)) < 0.01
+      )
+      setSplitMode(isEqual ? 'equal' : 'custom')
+
+      // Init custom splits from stored values
+      const init: Record<string, string> = {}
+      mems.forEach(m => {
+        const stored = splits?.find(s => s.member_id === m.id)
+        init[m.id] = stored ? String(stored.owed_amount) : ''
+      })
+      setCustomSplit(init)
       setLoadingData(false)
     }
     load()
-  }, [groupId, router])
+  }, [groupId, expId, router])
 
   const parsedAmount = parseFloat(amount) || 0
 
@@ -92,51 +111,47 @@ export default function NewExpensePage() {
 
     const splits = splitMode === 'equal'
       ? getEqualSplits()
-      : Object.fromEntries(
-          members.map(m => [m.id, parseFloat(customSplit[m.id] || '0')])
-        )
+      : Object.fromEntries(members.map(m => [m.id, parseFloat(customSplit[m.id] || '0')]))
 
-    const { data: expense, error: expErr } = await supabase
+    // 1. Update expense
+    const { error: expErr } = await supabase
       .from('expenses')
-      .insert({
-        group_id:   groupId,
-        paid_by:    paidBy,
-        title:      title.trim(),
-        amount:     parsedAmount,
-        category,
-        date,
-        created_by: myMemberId || paidBy,
-      })
-      .select()
-      .single()
+      .update({ title: title.trim(), amount: parsedAmount, category, date, paid_by: paidBy })
+      .eq('id', expId)
 
-    if (expErr || !expense) {
-      setError('Failed to add expense. Please try again.')
+    if (expErr) {
+      setError('Failed to update expense. Please try again.')
       setLoading(false)
       return
     }
 
+    // 2. Delete existing splits
+    await supabase.from('expense_splits').delete().eq('expense_id', expId)
+
+    // 3. Re-insert fresh splits
     const splitRows = members.map(m => ({
-      expense_id:  expense.id,
+      expense_id:  expId,
       member_id:   m.id,
       owed_amount: splits[m.id] ?? 0,
     }))
     await supabase.from('expense_splits').insert(splitRows)
 
+    // 4. Activity log
     const payer = members.find(m => m.id === paidBy)
-    const splitDesc = splitMode === 'equal'
-      ? `split equally ${members.length} ways`
-      : 'custom split'
+    const editor = members.find(m => m.id === myMemberId)
+    const splitDesc = splitMode === 'equal' ? `split equally ${members.length} ways` : 'custom split'
     await supabase.from('activity_log').insert({
       group_id:    groupId,
       member_id:   myMemberId || paidBy,
-      action:      'added_expense',
-      entity_id:   expense.id,
-      description: `${payer?.display_name ?? 'Someone'} added ${title.trim()} ${formatCurrency(parsedAmount)} · ${splitDesc}`,
+      action:      'edited_expense',
+      entity_id:   expId,
+      description: `${editor?.display_name ?? 'Someone'} edited "${title.trim()}" — ${formatCurrency(parsedAmount)} paid by ${payer?.display_name ?? 'Unknown'} (${splitDesc})`,
     })
 
-    router.push(`/groups/${groupId}`)
+    router.push(`/groups/${groupId}/expenses/${expId}${fromParam}`)
   }
+
+  const cancelHref = `/groups/${groupId}/expenses/${expId}${fromParam}`
 
   if (loadingData) return (
     <div className="p-6 text-center text-[#8c7b70]">Loading…</div>
@@ -144,7 +159,12 @@ export default function NewExpensePage() {
 
   return (
     <div className="px-4 pt-6 pb-8">
-      <h2 className="text-xl font-bold text-[#faf7f5] mb-6">Add expense</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-[#faf7f5]">Edit expense</h2>
+        <Link href={cancelHref} className="text-sm text-[#8c7b70] hover:text-[#faf7f5] transition-colors">
+          Cancel
+        </Link>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Amount */}
@@ -226,7 +246,7 @@ export default function NewExpensePage() {
           </div>
         </div>
 
-        {/* Split mode — pill toggle */}
+        {/* Split mode */}
         <div>
           <label className="block text-sm text-[#8c7b70] mb-1.5">Split</label>
           <div className="flex rounded-full p-0.5 bg-[#1a1614] border border-[#2c2825]">
@@ -269,7 +289,7 @@ export default function NewExpensePage() {
                     placeholder="0.00"
                     min="0"
                     step="0.01"
-                    value={customSplit[m.id]}
+                    value={customSplit[m.id] ?? ''}
                     onChange={e => setCustomSplit(prev => ({ ...prev, [m.id]: e.target.value }))}
                     className="w-28 bg-[#1a1614] border border-[#2c2825] rounded-lg px-3 py-2
                                text-[#faf7f5] text-right focus:outline-none focus:border-[#f97316]"
@@ -288,9 +308,17 @@ export default function NewExpensePage() {
           className="w-full bg-[#f97316] hover:bg-[#fb923c] text-white rounded-xl
                      py-3 font-semibold transition-colors disabled:opacity-50"
         >
-          {loading ? 'Saving…' : 'Add expense'}
+          {loading ? 'Saving…' : 'Save changes'}
         </button>
       </form>
     </div>
+  )
+}
+
+export default function EditExpensePage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-[#8c7b70]">Loading…</div>}>
+      <EditExpenseContent />
+    </Suspense>
   )
 }

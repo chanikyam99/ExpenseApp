@@ -63,8 +63,8 @@ export function getCategoryLabel(id: string): string {
 
 // Avatar colors assigned to group members
 export const AVATAR_COLORS = [
-  '#3b82f6', '#8b5cf6', '#ec4899', '#f97316',
-  '#22c55e', '#14b8a6', '#f59e0b', '#ef4444',
+  '#f97316', '#ec4899', '#8b5cf6', '#14b8a6',
+  '#f59e0b', '#22c55e', '#ef4444', '#06b6d4',
 ]
 
 // Get 1–2 uppercase initials from a display name

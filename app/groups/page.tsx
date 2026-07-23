@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { PlusIcon } from 'lucide-react'
+import { DeleteGroupButton } from '@/components/delete-group-button'
 
 export default async function GroupsPage() {
   const supabase = createClient()
@@ -10,7 +11,7 @@ export default async function GroupsPage() {
   if (!user) redirect('/')
   const { data: memberships } = await supabase
     .from('group_members')
-    .select('id, display_name, group_id, groups(id, name, status)')
+    .select('id, display_name, group_id, groups(id, name, status, created_by)')
     .eq('user_id', user.id)
     .order('joined_at', { ascending: false })
 
@@ -18,16 +19,16 @@ export default async function GroupsPage() {
   const archived = memberships?.filter(m => (m.groups as any)?.status === 'archived') ?? []
 
   return (
-    <div className="min-h-screen bg-[#09090b]">
+    <div className="min-h-screen bg-[#0f0d0c]">
       {/* Header */}
-      <div className="border-b border-[#27272a] px-4 py-4 sticky top-0 bg-[#09090b] z-10">
+      <div className="border-b border-[#2c2825] px-4 py-4 sticky top-0 bg-[#0f0d0c] z-10">
         <div className="max-w-xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white">
-            Split<span className="text-[#3b82f6]">House</span>
+          <h1 className="text-xl font-bold text-[#faf7f5]">
+            Split<span className="text-[#f97316]">House</span>
           </h1>
           <Link
             href="/groups/new"
-            className="flex items-center gap-2 bg-[#3b82f6] hover:bg-blue-500
+            className="flex items-center gap-2 bg-[#f97316] hover:bg-[#fb923c]
                        text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             <PlusIcon size={16} />
@@ -40,11 +41,11 @@ export default async function GroupsPage() {
         {active.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-4">🏠</p>
-            <p className="text-white font-medium text-lg">No groups yet</p>
-            <p className="text-[#71717a] text-sm mt-1">Create one and invite your housemates.</p>
+            <p className="text-[#faf7f5] font-medium text-lg">No groups yet</p>
+            <p className="text-[#8c7b70] text-sm mt-1">Create one and invite your housemates.</p>
             <Link
               href="/groups/new"
-              className="inline-block mt-6 bg-[#3b82f6] hover:bg-blue-500
+              className="inline-block mt-6 bg-[#f97316] hover:bg-[#fb923c]
                          text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
             >
               Create your first group
@@ -52,26 +53,36 @@ export default async function GroupsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
+            <p className="text-xs font-semibold text-[#8c7b70] uppercase tracking-wider">
               Active ({active.length})
             </p>
             {active.map(m => (
-              <Link
+              <div
                 key={m.group_id}
-                href={`/groups/${m.group_id}`}
-                className="flex items-center justify-between bg-[#18181b] border border-[#27272a]
-                           rounded-xl p-4 hover:border-[#3f3f46] transition-colors group"
+                className="flex items-center gap-2 bg-[#1a1614] border border-[#2c2825]
+                           rounded-xl p-4 hover:border-[#3a3330] transition-colors"
               >
-                <div>
-                  <p className="font-semibold text-white">
-                    {(m.groups as any)?.name}
-                  </p>
-                  <p className="text-[#71717a] text-sm mt-0.5">
-                    You are <strong>{m.display_name}</strong>
-                  </p>
-                </div>
-                <span className="text-[#71717a] group-hover:text-white transition-colors">→</span>
-              </Link>
+                <Link
+                  href={`/groups/${m.group_id}`}
+                  className="flex items-center justify-between flex-1 min-w-0 group"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#faf7f5] truncate">
+                      {(m.groups as any)?.name}
+                    </p>
+                    <p className="text-[#8c7b70] text-sm mt-0.5">
+                      You are <strong>{m.display_name}</strong>
+                    </p>
+                  </div>
+                  <span className="text-[#8c7b70] group-hover:text-[#faf7f5] transition-colors mx-3">→</span>
+                </Link>
+                {(m.groups as any)?.created_by === user.id && (
+                  <DeleteGroupButton
+                    groupId={m.group_id}
+                    groupName={(m.groups as any)?.name ?? ''}
+                  />
+                )}
+              </div>
             ))}
           </div>
         )}
@@ -79,7 +90,7 @@ export default async function GroupsPage() {
         {archived.length > 0 && (
           <details className="group/arc">
             <summary className="cursor-pointer list-none flex items-center gap-2
-                                text-xs font-semibold text-[#71717a] uppercase tracking-wider">
+                                text-xs font-semibold text-[#8c7b70] uppercase tracking-wider">
               <span className="group-open/arc:rotate-90 transition-transform inline-block">›</span>
               Archived ({archived.length})
             </summary>
@@ -88,15 +99,15 @@ export default async function GroupsPage() {
                 <Link
                   key={m.group_id}
                   href={`/groups/${m.group_id}`}
-                  className="flex items-center justify-between bg-[#18181b]/60 border
-                             border-[#27272a] rounded-xl p-4 opacity-60 hover:opacity-100
+                  className="flex items-center justify-between bg-[#1a1614]/60 border
+                             border-[#2c2825] rounded-xl p-4 opacity-60 hover:opacity-100
                              transition-opacity"
                 >
                   <div>
-                    <p className="font-medium text-white">{(m.groups as any)?.name}</p>
-                    <p className="text-[#71717a] text-xs mt-0.5">Archived</p>
+                    <p className="font-medium text-[#faf7f5]">{(m.groups as any)?.name}</p>
+                    <p className="text-[#8c7b70] text-xs mt-0.5">Archived</p>
                   </div>
-                  <span className="text-[#71717a]">→</span>
+                  <span className="text-[#8c7b70]">→</span>
                 </Link>
               ))}
             </div>

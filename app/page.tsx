@@ -5,10 +5,10 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [email,   setEmail]   = useState('')
+  const [sent,    setSent]    = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error,   setError]   = useState('')
 
   const supabase = createClient()
 
@@ -38,43 +38,43 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-         redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0f0d0c] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Split<span className="text-[#3b82f6]">House</span>
+          <h1 className="text-3xl font-bold text-[#faf7f5] tracking-tight">
+            Split<span className="text-[#f97316]">House</span>
           </h1>
-          <p className="text-[#71717a] mt-2 text-sm">
+          <p className="text-[#8c7b70] mt-2 text-sm">
             Track house expenses together — free, forever
           </p>
         </div>
 
         {sent ? (
-          <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
+          <div className="bg-[#1a1614] border border-[#2c2825] rounded-xl p-6 text-center">
             <div className="text-3xl mb-3">📬</div>
-            <p className="font-medium text-white">Check your inbox</p>
-            <p className="text-[#71717a] text-sm mt-1">
+            <p className="font-medium text-[#faf7f5]">Check your inbox</p>
+            <p className="text-[#8c7b70] text-sm mt-1">
               We sent a login link to <strong>{email}</strong>
             </p>
             <button
               onClick={() => { setSent(false); setEmail('') }}
-              className="mt-4 text-sm text-[#3b82f6] hover:underline"
+              className="mt-4 text-sm text-[#f97316] hover:underline"
             >
               Use a different email
             </button>
           </div>
         ) : (
-          <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 space-y-4">
+          <div className="bg-[#1a1614] border border-[#2c2825] rounded-xl p-6 space-y-4">
             <form onSubmit={handleMagicLink} className="space-y-3">
               <div>
-                <label className="block text-sm text-[#71717a] mb-1.5">
+                <label className="block text-sm text-[#8c7b70] mb-1.5">
                   Email address
                 </label>
                 <input
@@ -83,9 +83,9 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
-                  className="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5
-                             text-white placeholder-[#52525b] focus:outline-none
-                             focus:border-[#3b82f6] transition-colors"
+                  className="w-full bg-[#0f0d0c] border border-[#2c2825] rounded-lg px-4 py-2.5
+                             text-[#faf7f5] placeholder-[#6b5a52] focus:outline-none
+                             focus:border-[#f97316] transition-colors"
                 />
               </div>
 
@@ -96,7 +96,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#3b82f6] hover:bg-blue-500 text-white rounded-lg
+                className="w-full bg-[#f97316] hover:bg-[#fb923c] text-white rounded-lg
                            px-4 py-2.5 font-medium transition-colors disabled:opacity-50"
               >
                 {loading ? 'Sending link...' : 'Send magic link'}
@@ -104,15 +104,15 @@ export default function LoginPage() {
             </form>
 
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#27272a]" />
-              <span className="text-[#71717a] text-xs uppercase tracking-wider">or</span>
-              <div className="flex-1 h-px bg-[#27272a]" />
+              <div className="flex-1 h-px bg-[#2c2825]" />
+              <span className="text-[#8c7b70] text-xs uppercase tracking-wider">or</span>
+              <div className="flex-1 h-px bg-[#2c2825]" />
             </div>
 
             <button
               onClick={handleGoogle}
-              className="w-full bg-[#09090b] hover:bg-[#27272a] border border-[#27272a]
-                         text-white rounded-lg px-4 py-2.5 font-medium transition-colors
+              className="w-full bg-[#0f0d0c] hover:bg-[#2c2825] border border-[#2c2825]
+                         text-[#faf7f5] rounded-lg px-4 py-2.5 font-medium transition-colors
                          flex items-center justify-center gap-3"
             >
               {/* Google logo SVG */}

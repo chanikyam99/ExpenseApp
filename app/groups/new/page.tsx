@@ -9,10 +9,10 @@ import Link from 'next/link'
 
 export default function NewGroupPage() {
   const router = useRouter()
-  const [name, setName] = useState('')
+  const [name,        setName]        = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState('')
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -26,17 +26,15 @@ export default function NewGroupPage() {
     if (!user) { router.push('/'); return }
 
     const { data: who, error: whoErr } = await supabase.rpc('who_am_i')
-
     console.log('who_am_i:', who)
     console.log('who_am_i error:', whoErr)
 
-    // 1. Create the group
     const { data: group, error: groupErr } = await supabase
       .from('groups')
       .insert({
-        name: name.trim(),
+        name:        name.trim(),
         invite_code: generateInviteCode(),
-        created_by: user.id,
+        created_by:  user.id,
       })
       .select()
       .single()
@@ -46,21 +44,13 @@ export default function NewGroupPage() {
       setLoading(false)
       return
     }
-    // if (groupErr || !group) {
-    // console.error("GROUP ERROR:", groupErr)
-    // console.error("GROUP DATA:", group)
-    // setError(groupErr?.message ?? "Failed to create group")
-    // setLoading(false)
-    // return
-    // }
 
-    // 2. Add creator as first member
     const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
     const { error: memberErr } = await supabase
       .from('group_members')
       .insert({
-        group_id: group.id,
-        user_id: user.id,
+        group_id:     group.id,
+        user_id:      user.id,
         display_name: displayName.trim(),
         avatar_color: color,
       })
@@ -75,21 +65,21 @@ export default function NewGroupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0f0d0c] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8">
-          <Link href="/groups" className="text-[#71717a] hover:text-white text-sm transition-colors">
+          <Link href="/groups" className="text-[#8c7b70] hover:text-[#faf7f5] text-sm transition-colors">
             ← Back
           </Link>
-          <h1 className="text-2xl font-bold text-white mt-4">Create a group</h1>
-          <p className="text-[#71717a] mt-1 text-sm">
+          <h1 className="text-2xl font-bold text-[#faf7f5] mt-4">Create a group</h1>
+          <p className="text-[#8c7b70] mt-1 text-sm">
             You can invite housemates after creating.
           </p>
         </div>
 
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label className="block text-sm text-[#71717a] mb-1.5">Group name</label>
+            <label className="block text-sm text-[#8c7b70] mb-1.5">Group name</label>
             <input
               type="text"
               placeholder="Our House, Goa Trip, Birthday…"
@@ -97,13 +87,13 @@ export default function NewGroupPage() {
               onChange={e => setName(e.target.value)}
               required
               maxLength={50}
-              className="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-4 py-2.5
-                         text-white placeholder-[#52525b] focus:outline-none focus:border-[#3b82f6]"
+              className="w-full bg-[#1a1614] border border-[#2c2825] rounded-lg px-4 py-2.5
+                         text-[#faf7f5] placeholder-[#6b5a52] focus:outline-none focus:border-[#f97316]"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-[#71717a] mb-1.5">
+            <label className="block text-sm text-[#8c7b70] mb-1.5">
               Your name in this group
             </label>
             <input
@@ -113,10 +103,10 @@ export default function NewGroupPage() {
               onChange={e => setDisplayName(e.target.value)}
               required
               maxLength={30}
-              className="w-full bg-[#18181b] border border-[#27272a] rounded-lg px-4 py-2.5
-                         text-white placeholder-[#52525b] focus:outline-none focus:border-[#3b82f6]"
+              className="w-full bg-[#1a1614] border border-[#2c2825] rounded-lg px-4 py-2.5
+                         text-[#faf7f5] placeholder-[#6b5a52] focus:outline-none focus:border-[#f97316]"
             />
-            <p className="text-[#71717a] text-xs mt-1">
+            <p className="text-[#8c7b70] text-xs mt-1">
               This is how others see you in expenses
             </p>
           </div>
@@ -126,7 +116,7 @@ export default function NewGroupPage() {
           <button
             type="submit"
             disabled={loading || !name.trim() || !displayName.trim()}
-            className="w-full bg-[#3b82f6] hover:bg-blue-500 text-white rounded-lg
+            className="w-full bg-[#f97316] hover:bg-[#fb923c] text-white rounded-lg
                        px-4 py-2.5 font-medium transition-colors disabled:opacity-50"
           >
             {loading ? 'Creating…' : 'Create group'}

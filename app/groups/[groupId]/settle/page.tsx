@@ -29,14 +29,9 @@ export default function SettlePage() {
       if (!user) { router.push('/'); return }
 
       const [{ data: mems }, { data: myMem }] = await Promise.all([
-        supabase.from('group_members')  .select(`
-    id,
-    group_id,
-    user_id,
-    display_name,
-    avatar_color,
-    joined_at
-  `).eq('group_id', groupId).order('joined_at'),
+        supabase.from('group_members').select(`
+          id, group_id, user_id, display_name, avatar_color, joined_at
+        `).eq('group_id', groupId).order('joined_at'),
         supabase.from('group_members').select('id').eq('group_id', groupId).eq('user_id', user.id).single(),
       ])
 
@@ -77,8 +72,8 @@ export default function SettlePage() {
       return
     }
 
-    const payerName  = members.find(m => m.id === paidBy)?.display_name ?? 'Someone'
-    const payeeName  = members.find(m => m.id === paidTo)?.display_name ?? 'someone'
+    const payerName = members.find(m => m.id === paidBy)?.display_name ?? 'Someone'
+    const payeeName = members.find(m => m.id === paidTo)?.display_name ?? 'someone'
     await supabase.from('activity_log').insert({
       group_id:    groupId,
       member_id:   myMemberId || paidBy,
@@ -92,12 +87,12 @@ export default function SettlePage() {
 
   return (
     <div className="px-4 pt-6 pb-8">
-      <h2 className="text-xl font-bold text-white mb-6">Record a settlement</h2>
+      <h2 className="text-xl font-bold text-[#faf7f5] mb-6">Record a settlement</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Paid by */}
         <div>
-          <label className="block text-sm text-[#71717a] mb-2">Who paid?</label>
+          <label className="block text-sm text-[#8c7b70] mb-2">Who paid?</label>
           <div className="flex flex-wrap gap-2">
             {members.map(m => (
               <button
@@ -106,8 +101,8 @@ export default function SettlePage() {
                 onClick={() => setPaidBy(m.id)}
                 className={`px-4 py-2 rounded-xl border text-sm font-medium transition-colors
                   ${paidBy === m.id
-                    ? 'bg-[#3b82f6] border-[#3b82f6] text-white'
-                    : 'bg-[#18181b] border-[#27272a] text-[#71717a] hover:border-[#3f3f46]'}`}
+                    ? 'bg-[#f97316] border-[#f97316] text-white'
+                    : 'bg-[#1a1614] border-[#2c2825] text-[#8c7b70] hover:border-[#3a3330]'}`}
               >
                 {m.display_name}
               </button>
@@ -117,7 +112,7 @@ export default function SettlePage() {
 
         {/* Paid to */}
         <div>
-          <label className="block text-sm text-[#71717a] mb-2">Paid to?</label>
+          <label className="block text-sm text-[#8c7b70] mb-2">Paid to?</label>
           <div className="flex flex-wrap gap-2">
             {members.filter(m => m.id !== paidBy).map(m => (
               <button
@@ -127,7 +122,7 @@ export default function SettlePage() {
                 className={`px-4 py-2 rounded-xl border text-sm font-medium transition-colors
                   ${paidTo === m.id
                     ? 'bg-[#22c55e]/20 border-[#22c55e] text-[#22c55e]'
-                    : 'bg-[#18181b] border-[#27272a] text-[#71717a] hover:border-[#3f3f46]'}`}
+                    : 'bg-[#1a1614] border-[#2c2825] text-[#8c7b70] hover:border-[#3a3330]'}`}
               >
                 {m.display_name}
               </button>
@@ -137,7 +132,7 @@ export default function SettlePage() {
 
         {/* Amount */}
         <div>
-          <label className="block text-sm text-[#71717a] mb-1.5">Amount (₹)</label>
+          <label className="block text-sm text-[#8c7b70] mb-1.5">Amount (₹)</label>
           <input
             type="number"
             placeholder="0.00"
@@ -146,34 +141,34 @@ export default function SettlePage() {
             required
             min="0.01"
             step="0.01"
-            className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-4 py-3
-                       text-white text-2xl font-bold placeholder-[#3f3f46]
-                       focus:outline-none focus:border-[#3b82f6]"
+            className="w-full bg-[#1a1614] border border-[#2c2825] rounded-xl px-4 py-3
+                       text-[#faf7f5] text-2xl font-bold placeholder-[#3a3330]
+                       focus:outline-none focus:border-[#f97316]"
           />
         </div>
 
         {/* Note + Date */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-[#71717a] mb-1.5">Note (optional)</label>
+            <label className="block text-sm text-[#8c7b70] mb-1.5">Note (optional)</label>
             <input
               type="text"
               placeholder="Rent, UPI, etc."
               value={note}
               onChange={e => setNote(e.target.value)}
               maxLength={60}
-              className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-4 py-3
-                         text-white placeholder-[#52525b] focus:outline-none focus:border-[#3b82f6]"
+              className="w-full bg-[#1a1614] border border-[#2c2825] rounded-xl px-4 py-3
+                         text-[#faf7f5] placeholder-[#6b5a52] focus:outline-none focus:border-[#f97316]"
             />
           </div>
           <div>
-            <label className="block text-sm text-[#71717a] mb-1.5">Date</label>
+            <label className="block text-sm text-[#8c7b70] mb-1.5">Date</label>
             <input
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-3
-                         text-white focus:outline-none focus:border-[#3b82f6]"
+              className="w-full bg-[#1a1614] border border-[#2c2825] rounded-xl px-3 py-3
+                         text-[#faf7f5] focus:outline-none focus:border-[#f97316]"
             />
           </div>
         </div>

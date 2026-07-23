@@ -22,7 +22,6 @@ export default function ActivityPage() {
   useEffect(() => {
     const supabase = createClient()
 
-    // Initial load
     supabase
       .from('activity_log')
       .select('id, description, created_at, action')
@@ -34,7 +33,6 @@ export default function ActivityPage() {
         setLoading(false)
       })
 
-    // Subscribe to new entries in real-time
     const channel = supabase
       .channel(`activity:${groupId}`)
       .on(
@@ -55,26 +53,26 @@ export default function ActivityPage() {
     return '📝'
   }
 
-  if (loading) return <div className="p-6 text-center text-[#71717a]">Loading…</div>
+  if (loading) return <div className="p-6 text-center text-[#8c7b70]">Loading…</div>
 
   return (
     <div className="px-4 pt-6">
-      <h2 className="text-lg font-bold text-white mb-4">Activity</h2>
+      <h2 className="text-lg font-bold text-[#faf7f5] mb-4">Activity</h2>
 
       {log.length === 0 ? (
-        <p className="text-center text-[#71717a] py-12">No activity yet.</p>
+        <p className="text-center text-[#8c7b70] py-12">No activity yet.</p>
       ) : (
         <div className="space-y-2">
           {log.map(entry => (
             <div
               key={entry.id}
-              className="flex items-start gap-3 bg-[#18181b] border border-[#27272a]
-                         rounded-xl p-4"
+              className="flex items-start gap-3 bg-[#1a1614] border border-[#2c2825]
+                         rounded-xl p-4 shadow-sm"
             >
               <span className="text-xl flex-shrink-0">{actionIcon(entry.action)}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[#d4d4d8] text-sm leading-relaxed">{entry.description}</p>
-                <p className="text-[#52525b] text-xs mt-1">{timeAgo(entry.created_at)}</p>
+                <p className="text-[#e8ddd9] text-sm leading-relaxed">{entry.description}</p>
+                <p className="text-[#6b5a52] text-xs mt-1">{timeAgo(entry.created_at)}</p>
               </div>
             </div>
           ))}

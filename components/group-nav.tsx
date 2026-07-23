@@ -17,8 +17,8 @@ export function GroupNav({ groupId }: { groupId: string }) {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-10 bg-[#09090b]/95
-                    backdrop-blur border-t border-[#27272a]">
+    <nav className="fixed bottom-0 left-0 right-0 z-10 bg-[#0f0d0c]/95
+                    backdrop-blur border-t border-[#2c2825]">
       <div className="max-w-xl mx-auto flex px-2 py-1">
         {NAV.map(item => {
           const href = `/groups/${groupId}${item.href}`
@@ -33,8 +33,8 @@ export function GroupNav({ groupId }: { groupId: string }) {
               className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl
                           flex-1 transition-colors
                           ${isActive
-                            ? 'text-[#3b82f6]'
-                            : 'text-[#71717a] hover:text-[#a1a1aa]'}`}
+                            ? 'text-[#f97316] bg-[#f97316]/10'
+                            : 'text-[#8c7b70] hover:text-[#c4b5ad]'}`}
             >
               <item.Icon size={20} />
               <span className="text-[10px] font-medium">{item.label}</span>

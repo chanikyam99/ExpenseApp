@@ -23,7 +23,6 @@ export default async function GroupLayout({
 
   if (!group) redirect('/groups')
 
-  // Confirm user is a member of this group
   const { data: membership } = await supabase
     .from('group_members')
     .select('id')
@@ -34,15 +33,15 @@ export default async function GroupLayout({
   if (!membership) redirect('/groups')
 
   return (
-    <div className="min-h-screen bg-[#09090b]">
+    <div className="min-h-screen bg-[#0f0d0c]">
       {/* Top breadcrumb */}
-      <div className="sticky top-0 z-10 border-b border-[#27272a] bg-[#09090b]/95 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b border-[#2c2825] bg-[#0f0d0c]/95 backdrop-blur">
         <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-2 text-sm">
-          <Link href="/groups" className="text-[#71717a] hover:text-white transition-colors">
+          <Link href="/groups" className="text-[#8c7b70] hover:text-[#faf7f5] transition-colors">
             Groups
           </Link>
-          <span className="text-[#3f3f46]">/</span>
-          <span className="text-white font-medium truncate">{group.name}</span>
+          <span className="text-[#3a3330]">/</span>
+          <span className="text-[#faf7f5] font-medium truncate">{group.name}</span>
         </div>
       </div>
 

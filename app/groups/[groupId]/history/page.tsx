@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate, getCategoryIcon, CATEGORIES } from '@/lib/utils'
 import { exportToCSV } from '@/lib/export'
+import { simplifyDebts } from '@/lib/balance'
 
 interface ExpenseRow {
   id: string
@@ -24,6 +25,9 @@ export default function HistoryPage() {
 
   const [expenses,        setExpenses]        = useState<ExpenseRow[]>([])
   const [members,         setMembers]         = useState<{ id: string; display_name: string }[]>([])
+  const [allSplits,       setAllSplits]       = useState<any[]>([])
+  const [allSettlements,  setAllSettlements]  = useState<any[]>([])
+  const [groupName,       setGroupName]       = useState('')
   const [filterMember,    setFilterMember]    = useState('')
   const [filterCategory,  setFilterCategory]  = useState('')
   const [loading,         setLoading]         = useState(true)
@@ -31,7 +35,12 @@ export default function HistoryPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const [{ data: exps }, { data: mems }] = await Promise.all([
+      const [
+        { data: exps },
+        { data: mems },
+        { data: rawSettlements },
+        { data: grp },
+      ] = await Promise.all([
         supabase.from('expenses')
           .select('id, date, title, category, amount, paid_by')
           .eq('group_id', groupId)
@@ -39,6 +48,13 @@ export default function HistoryPage() {
         supabase.from('group_members')
           .select('id, display_name')
           .eq('group_id', groupId),
+        supabase.from('settlements')
+          .select('paid_by, paid_to, amount')
+          .eq('group_id', groupId),
+        supabase.from('groups')
+          .select('name')
+          .eq('id', groupId)
+          .single(),
       ])
 
       const memberMap = new Map((mems ?? []).map(m => [m.id, m.display_name]))
@@ -48,6 +64,19 @@ export default function HistoryPage() {
         paid_by_name: memberMap.get(e.paid_by) ?? 'Unknown',
       })))
       setMembers(mems ?? [])
+      setAllSettlements(rawSettlements ?? [])
+      setGroupName(grp?.name ?? 'Group')
+
+      // Fetch splits (guard against empty array)
+      const expenseIds = (exps ?? []).map(e => e.id)
+      if (expenseIds.length > 0) {
+        const { data: rawSplits } = await supabase
+          .from('expense_splits')
+          .select('expense_id, member_id, owed_amount')
+          .in('expense_id', expenseIds)
+        setAllSplits(rawSplits ?? [])
+      }
+
       setLoading(false)
     }
     load()
@@ -76,16 +105,27 @@ export default function HistoryPage() {
   }
 
   function handleExport() {
-    exportToCSV(filtered.map(e => ({
-      date:         e.date,
-      title:        e.title,
-      category:     e.category,
-      amount:       e.amount,
-      paid_by_name: e.paid_by_name,
-    })), 'Expenses')
+    const debts = simplifyDebts(
+      members,
+      expenses.map(e => ({ id: e.id, paid_by: e.paid_by, amount: e.amount })),
+      allSplits,
+      allSettlements,
+    )
+
+    exportToCSV(
+      filtered.map(e => ({
+        date:         e.date,
+        title:        e.title,
+        category:     e.category,
+        amount:       e.amount,
+        paid_by_name: e.paid_by_name,
+      })),
+      groupName,
+      debts.map(d => ({ fromName: d.fromName, toName: d.toName, amount: d.amount }))
+    )
   }
 
-  if (loading) return <div className="p-6 text-center text-[#71717a]">Loading…</div>
+  if (loading) return <div className="p-6 text-center text-[#8c7b70]">Loading…</div>
 
   return (
     <div className="px-4 pt-6">
@@ -94,8 +134,8 @@ export default function HistoryPage() {
         <select
           value={filterMember}
           onChange={e => setFilterMember(e.target.value)}
-          className="bg-[#18181b] border border-[#27272a] text-white text-sm
-                     rounded-lg px-3 py-2 focus:outline-none focus:border-[#3b82f6]"
+          className="bg-[#1a1614] border border-[#2c2825] text-[#faf7f5] text-sm
+                     rounded-lg px-3 py-2 focus:outline-none focus:border-[#f97316]"
         >
           <option value="">All members</option>
           {members.map(m => (
@@ -106,8 +146,8 @@ export default function HistoryPage() {
         <select
           value={filterCategory}
           onChange={e => setFilterCategory(e.target.value)}
-          className="bg-[#18181b] border border-[#27272a] text-white text-sm
-                     rounded-lg px-3 py-2 focus:outline-none focus:border-[#3b82f6]"
+          className="bg-[#1a1614] border border-[#2c2825] text-[#faf7f5] text-sm
+                     rounded-lg px-3 py-2 focus:outline-none focus:border-[#f97316]"
         >
           <option value="">All categories</option>
           {CATEGORIES.map(c => (
@@ -117,8 +157,8 @@ export default function HistoryPage() {
 
         <button
           onClick={handleExport}
-          className="ml-auto text-sm text-[#71717a] hover:text-white border border-[#27272a]
-                     hover:border-[#3f3f46] px-3 py-2 rounded-lg transition-colors"
+          className="ml-auto text-sm text-[#8c7b70] hover:text-[#faf7f5] border border-[#2c2825]
+                     hover:border-[#3a3330] px-3 py-2 rounded-lg transition-colors"
         >
           ↓ Export CSV
         </button>
@@ -126,7 +166,7 @@ export default function HistoryPage() {
 
       {/* Expense list */}
       {sortedMonths.length === 0 ? (
-        <p className="text-center text-[#71717a] py-12">No expenses match your filters.</p>
+        <p className="text-center text-[#8c7b70] py-12">No expenses match your filters.</p>
       ) : (
         <div className="space-y-6">
           {sortedMonths.map(month => {
@@ -134,27 +174,27 @@ export default function HistoryPage() {
             return (
               <div key={month}>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-[#8c7b70] uppercase tracking-wider">
                     {monthLabel(month)}
                   </p>
-                  <p className="text-xs text-[#71717a]">{formatCurrency(monthTotal)}</p>
+                  <p className="text-xs text-[#8c7b70]">{formatCurrency(monthTotal)}</p>
                 </div>
                 <div className="space-y-2">
                   {grouped[month].map(e => (
                     <Link
                       key={e.id}
-                      href={`/groups/${groupId}/expenses/${e.id}`}
-                      className="flex items-center gap-3 bg-[#18181b] border border-[#27272a]
-                                 rounded-xl p-4 hover:border-[#3f3f46] transition-colors"
+                      href={`/groups/${groupId}/expenses/${e.id}?from=history`}
+                      className="flex items-center gap-3 bg-[#1a1614] border border-[#2c2825]
+                                 rounded-xl p-4 hover:border-[#3a3330] transition-colors"
                     >
                       <span className="text-2xl">{getCategoryIcon(e.category)}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">{e.title}</p>
-                        <p className="text-[#71717a] text-xs mt-0.5">
+                        <p className="font-medium text-[#faf7f5] truncate">{e.title}</p>
+                        <p className="text-[#8c7b70] text-xs mt-0.5">
                           {e.paid_by_name} · {formatDate(e.date)}
                         </p>
                       </div>
-                      <span className="font-semibold text-white whitespace-nowrap">
+                      <span className="font-semibold text-[#faf7f5] whitespace-nowrap">
                         {formatCurrency(e.amount)}
                       </span>
                     </Link>
