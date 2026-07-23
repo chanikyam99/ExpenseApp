@@ -188,8 +188,8 @@ export default function NewExpensePage() {
     })
 
     showToast('Expense added!')
-    router.refresh()
     router.push(`/groups/${groupId}`)
+    router.refresh()
   }
 
   if (loadingData) return (

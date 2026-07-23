@@ -53,9 +53,10 @@ export default function HistoryPage() {
           .select('id, display_name')
           .eq('group_id', groupId),
         supabase.from('settlements')
-          .select('id, paid_by, paid_to, amount, date, note')
+          .select('id, paid_by, paid_to, amount, date, note, created_at')
           .eq('group_id', groupId)
-          .order('date', { ascending: false }),
+          .order('date', { ascending: false })
+          .order('created_at', { ascending: false }),
         supabase.from('groups')
           .select('name')
           .eq('id', groupId)
@@ -246,7 +247,11 @@ export default function HistoryPage() {
           <div className="space-y-2">
             {allSettlements
               .slice()
-              .sort((a: any, b: any) => b.date?.localeCompare(a.date ?? '') ?? 0)
+              .sort((a: any, b: any) => {
+                const byDate = (b.date ?? '').localeCompare(a.date ?? '')
+                if (byDate !== 0) return byDate
+                return (b.created_at ?? '').localeCompare(a.created_at ?? '')
+              })
               .map((s: any) => {
                 const memberMap = new Map(members.map(m => [m.id, m.display_name]))
                 const fromName  = memberMap.get(s.paid_by) ?? 'Unknown'

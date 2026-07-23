@@ -98,8 +98,8 @@ function SettleContent() {
     })
 
     showToast('Settlement recorded!')
-    router.refresh()
     router.push(`/groups/${groupId}`)
+    router.refresh()
   }
 
   return (

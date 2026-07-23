@@ -73,8 +73,8 @@ export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, is
     }
 
     showToast('Expense deleted', 'error')
-    router.refresh()
     router.push(`/groups/${groupId}`)
+    router.refresh()
   }
 
   return (

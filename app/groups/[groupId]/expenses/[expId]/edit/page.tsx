@@ -200,8 +200,8 @@ function EditExpenseContent() {
     })
 
     showToast('Expense updated!')
-    router.refresh()
     router.push(`/groups/${groupId}/expenses/${expId}${fromParam}`)
+    router.refresh()
   }
 
   const cancelHref = `/groups/${groupId}/expenses/${expId}${fromParam}`
