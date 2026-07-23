@@ -3,13 +3,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HomeIcon, ClockIcon, BarChart3Icon, ActivityIcon, UsersIcon } from 'lucide-react'
+import { HomeIcon, ClockIcon, BarChart3Icon, UsersIcon } from 'lucide-react'
 
 const NAV = [
   { href: '',          label: 'Home',     Icon: HomeIcon },
   { href: '/history',  label: 'History',  Icon: ClockIcon },
   { href: '/insights', label: 'Insights', Icon: BarChart3Icon },
-  { href: '/activity', label: 'Activity', Icon: ActivityIcon },
+
   { href: '/members',  label: 'Members',  Icon: UsersIcon },
 ]
 

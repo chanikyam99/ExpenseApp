@@ -105,7 +105,7 @@ export default function NewExpensePage() {
         amount:     parsedAmount,
         category,
         date,
-        created_by: myMemberId || paidBy,
+        created_by: myMemberId,
       })
       .select()
       .single()
