@@ -39,11 +39,17 @@ export default function JoinPage() {
       }
 
       // Find the group
-      const { data: grp } = await supabase
-        .from('groups')
-        .select('id, name')
-        .eq('invite_code', inviteCode)
-        .single()
+      // const { data: grp } = await supabase
+      //   .from('groups')
+      //   .select('id, name')
+      //   .eq('invite_code', inviteCode)
+      //   .single()
+      const { data, error } = await supabase
+        .rpc('get_group_by_invite', {
+          invite: inviteCode,
+        })
+
+      const grp = data?.[0]
 
       if (!grp) {
         setError('This invite link is invalid or has expired.')
