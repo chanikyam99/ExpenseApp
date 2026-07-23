@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
@@ -11,22 +11,15 @@ interface Props {
   groupId: string
   expenseTitle: string
   expenseAmount: number
-  createdBy: string   // auth user id who created the expense
+  isCreator: boolean
   from?: string
 }
 
-export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, createdBy, from }: Props) {
+export function ExpenseActions({ expId, groupId, expenseTitle, expenseAmount, isCreator, from }: Props) {
   const router = useRouter()
-  const [confirming,  setConfirming]  = useState(false)
-  const [deleting,    setDeleting]    = useState(false)
-  const [error,       setError]       = useState('')
-  const [isCreator,   setIsCreator]   = useState(false)
-
-  useEffect(() => {
-    createClient().auth.getUser().then(({ data: { user } }) => {
-      setIsCreator(!!user && user.id === createdBy)
-    })
-  }, [createdBy])
+  const [confirming, setConfirming] = useState(false)
+  const [deleting,   setDeleting]   = useState(false)
+  const [error,      setError]      = useState('')
 
   const fromParam = from ? `?from=${from}` : ''
   const editHref = `/groups/${groupId}/expenses/${expId}/edit${fromParam}`

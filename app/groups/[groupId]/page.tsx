@@ -53,6 +53,12 @@ export default async function DashboardPage({
 
   const totalSpend = (expenses ?? []).reduce((sum, e) => sum + Number(e.amount), 0)
 
+  const myMember = (members ?? []).find((m: { user_id: string | null; id: string }) => m.user_id === user.id)
+  const mySpend  = myMember
+    ? (expenses ?? []).filter((e: { paid_by: string }) => e.paid_by === myMember.id)
+        .reduce((sum: number, e: { amount: number | string }) => sum + Number(e.amount), 0)
+    : 0
+
   // Build a combined, sorted recent activity list (expenses + settlements), take 5
   type RecentItem =
     | { kind: 'expense'; id: string; title: string; amount: number; category: string; date: string; payerId: string }
@@ -75,10 +81,18 @@ export default async function DashboardPage({
 
   return (
     <div className="px-4 pt-6 space-y-6 pb-6">
-      {/* Total spend */}
-      <div>
-        <p className="text-[#8c7b70] text-sm">Total group spend</p>
-        <p className="text-3xl font-bold text-[#faf7f5] mt-0.5">{formatCurrency(totalSpend)}</p>
+      {/* Spend summary */}
+      <div className="flex gap-6">
+        <div>
+          <p className="text-[#8c7b70] text-xs uppercase tracking-wider">Total spend</p>
+          <p className="text-3xl font-bold text-[#faf7f5] mt-0.5">{formatCurrency(totalSpend)}</p>
+        </div>
+        {mySpend > 0 && (
+          <div className="border-l border-[#2c2825] pl-6">
+            <p className="text-[#8c7b70] text-xs uppercase tracking-wider">My spend</p>
+            <p className="text-3xl font-bold text-[#f97316] mt-0.5">{formatCurrency(mySpend)}</p>
+          </div>
+        )}
       </div>
 
       {/* Simplified debts */}

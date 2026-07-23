@@ -44,6 +44,10 @@ export default async function ExpenseDetailPage({
   const memberMap = new Map((members ?? []).map(m => [m.id, m]))
   const payer = memberMap.get(expense.paid_by)
 
+  // created_by stores a group_members.id — compare against current user's member record
+  const myMemberId = (members ?? []).find((m: { user_id: string | null; id: string }) => m.user_id === user.id)?.id
+  const isCreator  = !!myMemberId && expense.created_by === myMemberId
+
   return (
     <div className="px-4 pt-6 pb-8">
       {/* Header row: back + actions */}
@@ -60,7 +64,7 @@ export default async function ExpenseDetailPage({
           groupId={params.groupId}
           expenseTitle={expense.title}
           expenseAmount={Number(expense.amount)}
-          createdBy={expense.created_by}
+          isCreator={isCreator}
           from={from}
         />
       </div>
