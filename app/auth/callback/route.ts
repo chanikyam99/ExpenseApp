@@ -28,9 +28,22 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
+    // if (!error) {
+    //   return NextResponse.redirect(`${origin}${next}`)
+    // }
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
-    }
+        const pendingNext = cookieStore.get('pending_next')?.value
+
+        if (pendingNext) {
+          cookieStore.delete('pending_next')
+
+          return NextResponse.redirect(
+            `${origin}${decodeURIComponent(pendingNext)}`
+          )
+        }
+
+        return NextResponse.redirect(`${origin}${next}`)
+      }
   }
 
   // If something went wrong, go back to login

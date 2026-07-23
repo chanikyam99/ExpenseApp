@@ -24,12 +24,17 @@ export default function JoinPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
+      // if (!user) {
+      //   // Save invite code in session storage and redirect to login
+      //   // sessionStorage.setItem('pendingInvite', inviteCode)
+      //   // router.push('/')
+      //   // router.push(`/?next=/join/${inviteCode}`)
+      //   router.push(`/?next=${encodeURIComponent(`/join/${inviteCode}`)}`)
+      //   return
+      // }
       if (!user) {
-        // Save invite code in session storage and redirect to login
-        // sessionStorage.setItem('pendingInvite', inviteCode)
-        // router.push('/')
-        // router.push(`/?next=/join/${inviteCode}`)
-        router.push(`/?next=${encodeURIComponent(`/join/${inviteCode}`)}`)
+        document.cookie = `pending_next=${encodeURIComponent(`/join/${inviteCode}`)}; path=/`
+        router.push('/')
         return
       }
 
