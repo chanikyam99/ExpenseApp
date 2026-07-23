@@ -2,34 +2,203 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #09090b;
-  --surface: #18181b;
-  --border: #27272a;
-  --text: #fafafa;
-  --muted: #71717a;
-  --green: #22c55e;
-  --red: #ef4444;
-  --blue: #3b82f6;
-  --amber: #f59e0b;
+/* ============================================================
+   THEME SETUP
+   ============================================================ */
+:root { color-scheme: dark; }
+[data-theme="light"] { color-scheme: light; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: #0f0d0c;
+  color: #faf7f5;
+  transition: background-color 0.35s ease, color 0.2s ease;
 }
 
-html {
-  scroll-behavior: smooth;
+[data-theme="light"] body {
+  background-color: #fdf8f3;
+  color: #1a0f08;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ============================================================
+   LIGHT MODE — BACKGROUND OVERRIDES
+   Uses [class~="..."] which does whitespace-token matching on
+   the class attribute value, so no CSS identifier escaping needed.
+   ============================================================ */
+[data-theme="light"] [class~="bg-[#0f0d0c]"] {
+  background-color: #fdf8f3 !important;
 }
-::-webkit-scrollbar-track {
-  background: var(--bg);
+[data-theme="light"] [class~="bg-[#0f0d0c]/95"] {
+  background-color: rgba(253, 248, 243, 0.96) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+[data-theme="light"] [class~="bg-[#1a1614]"] {
+  background-color: rgba(255, 255, 255, 0.80) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+[data-theme="light"] [class~="bg-[#1a1614]/80"] {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
 }
+[data-theme="light"] [class~="bg-[#2c2825]"] {
+  background-color: rgba(200, 185, 168, 0.35) !important;
+}
+
+/* ============================================================
+   LIGHT MODE — BORDER OVERRIDES
+   ============================================================ */
+[data-theme="light"] [class~="border-[#2c2825]"] {
+  border-color: rgba(200, 185, 168, 0.55) !important;
+}
+[data-theme="light"] [class~="border-[#3a3330]"] {
+  border-color: rgba(175, 155, 138, 0.70) !important;
+}
+[data-theme="light"] [class~="border-[#2c2825]/50"] {
+  border-color: rgba(200, 185, 168, 0.28) !important;
+}
+
+/* ============================================================
+   LIGHT MODE — TEXT OVERRIDES
+   ============================================================ */
+[data-theme="light"] [class~="text-[#faf7f5]"] { color: #1a0f08 !important; }
+[data-theme="light"] [class~="text-[#e8ddd9]"] { color: #3d2c20 !important; }
+[data-theme="light"] [class~="text-[#a89080]"] { color: #7a6557 !important; }
+
+/* Green — darker variant for legibility on cream */
+[data-theme="light"] [class~="text-[#22c55e]"]        { color: #15803d !important; }
+[data-theme="light"] [class~="border-[#22c55e]"]      { border-color: #16a34a !important; }
+[data-theme="light"] [class~="bg-[#22c55e]/10"]       { background-color: rgba(21,128,61,0.10) !important; }
+[data-theme="light"] [class~="bg-[#22c55e]/20"]       { background-color: rgba(21,128,61,0.18) !important; }
+[data-theme="light"] [class~="border-[#22c55e]/20"]   { border-color: rgba(21,128,61,0.25) !important; }
+[data-theme="light"] [class~="border-[#22c55e]/50"]   { border-color: rgba(21,128,61,0.40) !important; }
+
+/* ============================================================
+   LIGHT MODE — SKELETON (higher specificity wins over bg override)
+   ============================================================ */
+[data-theme="light"] .animate-pulse [class~="bg-[#1a1614]"] {
+  background-color: rgba(210, 195, 178, 0.50) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+[data-theme="light"] .animate-pulse [class~="bg-[#f97316]/20"] {
+  background-color: rgba(210, 195, 178, 0.50) !important;
+}
+
+/* ============================================================
+   LIGHT MODE — FORM ELEMENTS
+   ============================================================ */
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: #b8a89a !important; }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+}
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.2) sepia(0.3);
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2c2825; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3330; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: #d4c4b8; }
+
+/* ============================================================
+   BACKGROUND GRAPHIC — DOT GRID
+   ============================================================ */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.065) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+[data-theme="light"] .bg-dot-grid {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.048) 1px, transparent 1px);
+}
+
+/* ============================================================
+   BACKGROUND GRAPHIC — GRADIENT ORBS
+   ============================================================ */
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(88px);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.bg-orb-1 {
+  width: clamp(280px, 78vw, 580px);
+  height: clamp(280px, 78vw, 580px);
+  background: radial-gradient(circle, rgba(249,115,22,0.28) 0%, rgba(249,115,22,0.07) 45%, transparent 70%);
+  top: -18%;
+  right: -18%;
+  animation: orb-float-1 26s ease-in-out infinite alternate;
+}
+.bg-orb-2 {
+  width: clamp(220px, 64vw, 480px);
+  height: clamp(220px, 64vw, 480px);
+  background: radial-gradient(circle, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.05) 45%, transparent 70%);
+  bottom: 6%;
+  left: -14%;
+  animation: orb-float-2 34s ease-in-out infinite alternate;
+}
+.bg-orb-3 {
+  width: clamp(180px, 54vw, 400px);
+  height: clamp(180px, 54vw, 400px);
+  background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.04) 45%, transparent 70%);
+  top: 36%;
+  left: 18%;
+  animation: orb-float-3 42s ease-in-out infinite alternate;
+}
+
+[data-theme="light"] .bg-orb-1 {
+  background: radial-gradient(circle, rgba(249,115,22,0.17) 0%, rgba(249,115,22,0.05) 45%, transparent 70%);
+}
+[data-theme="light"] .bg-orb-2 {
+  background: radial-gradient(circle, rgba(251,191,36,0.16) 0%, rgba(251,191,36,0.04) 45%, transparent 70%);
+}
+[data-theme="light"] .bg-orb-3 {
+  background: radial-gradient(circle, rgba(234,88,12,0.11) 0%, transparent 70%);
+}
+
+@keyframes orb-float-1 {
+  0%   { transform: translate(0,0) scale(1); }
+  30%  { transform: translate(-26px,54px) scale(1.07); }
+  70%  { transform: translate(38px,16px) scale(0.95); }
+  100% { transform: translate(-14px,66px) scale(1.04); }
+}
+@keyframes orb-float-2 {
+  0%   { transform: translate(0,0) scale(1); }
+  40%  { transform: translate(60px,-48px) scale(1.09); }
+  100% { transform: translate(28px,-80px) scale(0.93); }
+}
+@keyframes orb-float-3 {
+  0%   { transform: translate(0,0) scale(1); }
+  50%  { transform: translate(-38px,-30px) scale(1.06); }
+  100% { transform: translate(30px,44px) scale(0.97); }
+}
+
+/* ============================================================
+   BACKGROUND GRAPHIC — SVG CONSTELLATION
+   ============================================================ */
+.c-line {
+  fill: none;
+  stroke: rgba(249,115,22,0.06);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-dasharray: 5 9;
+}
+[data-theme="light"] .c-line { stroke: rgba(249,115,22,0.09); }
+
+.c-node { fill: rgba(249,115,22,0.18); }
+[data-theme="light"] .c-node { fill: rgba(249,115,22,0.26); }
+
+.flow-dot { fill: rgba(249,115,22,0.60); }
+[data-theme="light"] .flow-dot { fill: rgba(234,88,12,0.70); }

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeftIcon, PlusIcon } from 'lucide-react'
 import { GroupNav } from '@/components/group-nav'
 import { LogoutButton } from '@/components/logout-button'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default async function GroupLayout({
   children,
@@ -35,7 +36,7 @@ export default async function GroupLayout({
   if (!membership) redirect('/groups')
 
   return (
-    <div className="min-h-screen bg-[#0f0d0c]">
+    <div className="min-h-screen">
       {/* Top header — prominent back navigation */}
       <div className="sticky top-0 z-10 border-b border-[#2c2825] bg-[#0f0d0c]/95 backdrop-blur">
         <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -49,6 +50,7 @@ export default async function GroupLayout({
           </Link>
           <span className="text-[#2c2825]">|</span>
           <span className="text-[#faf7f5] font-semibold text-sm truncate flex-1">{group.name}</span>
+          <ThemeToggle />
           <LogoutButton />
         </div>
       </div>

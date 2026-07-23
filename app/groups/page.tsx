@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PlusIcon } from 'lucide-react'
 import { DeleteGroupButton } from '@/components/delete-group-button'
 import { LogoutButton } from '@/components/logout-button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { formatCurrency } from '@/lib/utils'
 
 export default async function GroupsPage() {
@@ -37,7 +38,7 @@ export default async function GroupsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0d0c]">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="border-b border-[#2c2825] px-4 py-4 sticky top-0 bg-[#0f0d0c] z-10">
         <div className="max-w-xl mx-auto flex items-center justify-between">
@@ -45,6 +46,7 @@ export default async function GroupsPage() {
             Split<span className="text-[#f97316]">House</span>
           </h1>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <LogoutButton />
             <Link
               href="/groups/new"
