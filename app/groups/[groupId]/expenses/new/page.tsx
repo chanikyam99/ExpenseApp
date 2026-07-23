@@ -23,6 +23,7 @@ export default function NewExpensePage() {
   const [paidBy,      setPaidBy]      = useState('')
   const [splitMode,   setSplitMode]   = useState<SplitMode>('equal')
   const [customSplit, setCustomSplit] = useState<Record<string, string>>({})
+  const [lockedSplit, setLockedSplit] = useState<Set<string>>(new Set())
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState('')
   const [loadingData, setLoadingData] = useState(true)
@@ -68,6 +69,47 @@ export default function NewExpensePage() {
 
   function getEqualSplits() {
     return equalSplits(parsedAmount, members.map(m => m.id))
+  }
+
+  function handleSplitModeSwitch(mode: SplitMode) {
+    setSplitMode(mode)
+    if (mode === 'custom' && parsedAmount > 0 && members.length > 0) {
+      const splits = equalSplits(parsedAmount, members.map(m => m.id))
+      const init: Record<string, string> = {}
+      members.forEach(m => { init[m.id] = splits[m.id]?.toFixed(2) ?? '0.00' })
+      setCustomSplit(init)
+      setLockedSplit(new Set())
+    }
+  }
+
+  function handleCustomChange(memberId: string, rawValue: string) {
+    const newLocked = new Set(lockedSplit)
+    if (rawValue === '') {
+      newLocked.delete(memberId)
+    } else {
+      newLocked.add(memberId)
+    }
+
+    const newCustom = { ...customSplit, [memberId]: rawValue }
+
+    const lockedTotal = members
+      .filter(m => newLocked.has(m.id))
+      .reduce((sum, m) => sum + (parseFloat(newCustom[m.id]) || 0), 0)
+
+    const remaining = parsedAmount - lockedTotal
+    const unlockedIds = members.filter(m => !newLocked.has(m.id)).map(m => m.id)
+
+    if (unlockedIds.length > 0) {
+      if (remaining > 0) {
+        const autoSplits = equalSplits(remaining, unlockedIds)
+        unlockedIds.forEach(id => { newCustom[id] = autoSplits[id].toFixed(2) })
+      } else {
+        unlockedIds.forEach(id => { newCustom[id] = '0.00' })
+      }
+    }
+
+    setLockedSplit(newLocked)
+    setCustomSplit(newCustom)
   }
 
   function splitSumError() {
@@ -235,7 +277,7 @@ export default function NewExpensePage() {
               <button
                 key={mode}
                 type="button"
-                onClick={() => setSplitMode(mode)}
+                onClick={() => handleSplitModeSwitch(mode)}
                 className={`flex-1 py-2 text-sm font-medium rounded-full transition-all
                   ${splitMode === mode
                     ? 'bg-[#f97316] text-white shadow-sm'
@@ -262,21 +304,27 @@ export default function NewExpensePage() {
 
           {splitMode === 'custom' && (
             <div className="mt-3 space-y-3">
-              {members.map(m => (
-                <div key={m.id} className="flex items-center gap-3">
-                  <span className="text-[#e8ddd9] text-sm flex-1">{m.display_name}</span>
-                  <input
-                    type="number"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    value={customSplit[m.id]}
-                    onChange={e => setCustomSplit(prev => ({ ...prev, [m.id]: e.target.value }))}
-                    className="w-28 bg-[#1a1614] border border-[#2c2825] rounded-lg px-3 py-2
-                               text-[#faf7f5] text-right focus:outline-none focus:border-[#f97316]"
-                  />
-                </div>
-              ))}
+              {members.map(m => {
+                const isLocked = lockedSplit.has(m.id)
+                return (
+                  <div key={m.id} className="flex items-center gap-3">
+                    <span className="text-[#e8ddd9] text-sm flex-1">{m.display_name}</span>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      value={customSplit[m.id] ?? ''}
+                      onChange={e => handleCustomChange(m.id, e.target.value)}
+                      className={`w-28 bg-[#1a1614] rounded-lg px-3 py-2 text-right
+                                 focus:outline-none focus:border-[#f97316]
+                                 ${isLocked
+                                   ? 'border border-[#2c2825] text-[#faf7f5]'
+                                   : 'border border-[#f97316]/20 text-[#a89080]'}`}
+                    />
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
