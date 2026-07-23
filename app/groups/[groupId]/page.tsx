@@ -31,14 +31,14 @@ export default async function DashboardPage({
     supabase.from('expense_splits').select('expense_id, member_id, owed_amount'),
     supabase.from('settlements').select('paid_by, paid_to, amount').eq('group_id', groupId),
     supabase.from('expenses')
-      .select('id, title, amount, category, date, paid_by')
+      .select('id, title, amount, category, date, paid_by, created_at')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false })
       .limit(10),
     supabase.from('settlements')
-      .select('id, paid_by, paid_to, amount, date, note')
+      .select('id, paid_by, paid_to, amount, date, note, created_at')
       .eq('group_id', groupId)
-      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(10),
   ])
 
@@ -69,22 +69,24 @@ export default async function DashboardPage({
 
   // Build a combined, sorted recent activity list (expenses + settlements), take 5
   type RecentItem =
-    | { kind: 'expense'; id: string; title: string; amount: number; category: string; date: string; payerId: string }
-    | { kind: 'settlement'; id: string; fromId: string; toId: string; amount: number; date: string; note?: string | null }
+    | { kind: 'expense'; id: string; title: string; amount: number; category: string; date: string; payerId: string; createdAt: string }
+    | { kind: 'settlement'; id: string; fromId: string; toId: string; amount: number; date: string; note?: string | null; createdAt: string }
 
   const expItems: RecentItem[] = (recentExpenses ?? []).map(e => ({
     kind: 'expense' as const,
     id: e.id, title: e.title, amount: Number(e.amount),
     category: e.category, date: e.date, payerId: e.paid_by,
+    createdAt: e.created_at ?? e.date,
   }))
   const settleItems: RecentItem[] = (recentSettlements ?? []).map(s => ({
     kind: 'settlement' as const,
     id: s.id, fromId: s.paid_by, toId: s.paid_to,
     amount: Number(s.amount), date: s.date, note: s.note,
+    createdAt: s.created_at ?? s.date,
   }))
 
   const recentItems = [...expItems, ...settleItems]
-    .sort((a, b) => b.date.localeCompare(a.date))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 5)
 
   return (
