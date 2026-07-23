@@ -195,7 +195,14 @@ export default function SettlePage() {
       if (!user) { router.push('/'); return }
 
       const [{ data: mems }, { data: myMem }] = await Promise.all([
-        supabase.from('group_members').select('id, display_name, avatar_color').eq('group_id', groupId).order('joined_at'),
+        supabase.from('group_members')  .select(`
+    id,
+    group_id,
+    user_id,
+    display_name,
+    avatar_color,
+    joined_at
+  `).eq('group_id', groupId).order('joined_at'),
         supabase.from('group_members').select('id').eq('group_id', groupId).eq('user_id', user.id).single(),
       ])
 

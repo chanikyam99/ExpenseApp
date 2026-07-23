@@ -25,7 +25,14 @@ export default async function DashboardPage({
     { data: settlements },
     { data: recentExpenses },
   ] = await Promise.all([
-    supabase.from('group_members').select('id, display_name, avatar_color').eq('group_id', groupId),
+    supabase.from('group_members')  .select(`
+    id,
+    group_id,
+    user_id,
+    display_name,
+    avatar_color,
+    joined_at
+  `).eq('group_id', groupId),
     supabase.from('expenses').select('id, paid_by, amount').eq('group_id', groupId),
     supabase.from('expense_splits').select('expense_id, member_id, owed_amount'),
     supabase.from('settlements').select('paid_by, paid_to, amount').eq('group_id', groupId),

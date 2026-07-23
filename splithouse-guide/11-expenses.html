@@ -107,7 +107,14 @@ export default function NewExpensePage() {
 
       const { data: mems } = await supabase
         .from('group_members')
-        .select('id, display_name, avatar_color')
+          .select(`
+    id,
+    group_id,
+    user_id,
+    display_name,
+    avatar_color,
+    joined_at
+  `)
         .eq('group_id', groupId)
         .order('joined_at')
 
@@ -400,7 +407,14 @@ export default async function ExpenseDetailPage({
   ] = await Promise.all([
     supabase.from('expenses').select('*').eq('id', params.expId).single(),
     supabase.from('expense_splits').select('member_id, owed_amount').eq('expense_id', params.expId),
-    supabase.from('group_members').select('id, display_name, avatar_color').eq('group_id', params.groupId),
+    supabase.from('group_members')  .select(`
+    id,
+    group_id,
+    user_id,
+    display_name,
+    avatar_color,
+    joined_at
+  `).eq('group_id', params.groupId),
     supabase.from('activity_log')
       .select('description, created_at, action')
       .eq('entity_id', params.expId)

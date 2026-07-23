@@ -35,7 +35,14 @@ export default function NewExpensePage() {
 
       const { data: mems } = await supabase
         .from('group_members')
-        .select('id, display_name, avatar_color')
+          .select(`
+    id,
+    group_id,
+    user_id,
+    display_name,
+    avatar_color,
+    joined_at
+  `)
         .eq('group_id', groupId)
         .order('joined_at')
 

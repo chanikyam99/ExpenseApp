@@ -56,7 +56,12 @@ export default function InsightsPage() {
   })).filter(d => d.value > 0)
 
   // Build list of available months
-  const allMonths = [...new Set(expenses.map(e => e.date?.slice(0, 7)))].sort().reverse()
+  // const allMonths = [...new Set(expenses.map(e => e.date?.slice(0, 7)))].sort().reverse()
+  const allMonths = Array.from(
+  new Set(expenses.map(e => e.date?.slice(0, 7)))
+  )
+  .sort()
+  .reverse()
 
   if (loading) return <div className="p-6 text-center text-[#71717a]">Loading…</div>
 
