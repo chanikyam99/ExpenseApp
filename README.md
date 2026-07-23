@@ -96,6 +96,10 @@ Start the production server:
 npm run start
 ```
 
+## Vercel app
+
+https://expense-app-seven-psi.vercel.app/
+
 ## Commands
 
 - `npm run dev` — Start Next.js dev server
